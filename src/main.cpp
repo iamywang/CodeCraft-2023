@@ -243,7 +243,7 @@ bool canSellItem(int robot_id, int platform_id) {
 }
 
 // 判断机器人能否购买物品
-bool canBuyItem(int robot_id, int platform_id) {
+bool canBuyItem(int robot_id, int platform_id, int money) {
     // 机器人是否有物品
     if (robots[robot_id]->item_type != 0)
         return false;
@@ -252,7 +252,8 @@ bool canBuyItem(int robot_id, int platform_id) {
         // 工作台能出售物品
         // 判断机器人是否离工作台最近
         if (robots[robot_id]->platform_id == platform_id)
-            return true;
+            if (money > item_prices.find(platforms[platform_id]->id)->second.first)
+                return true;
         return false;
     }
     return false;
@@ -378,7 +379,7 @@ double getCollisionValue(double impulse) {
 // 贪心算法
 // 1. 机器人每次找离自己最近的可接收物品
 // 2. 并送给离自己最近的可接收的平台
-void greedyAlg2(int frame_id) {
+void greedyAlg2(int frame_id, int money) {
     cout << frame_id << endl;
     cout << flush;
 
@@ -410,7 +411,7 @@ void greedyAlg2(int frame_id) {
                 int fetch_index = robots[robot_idx]->platform_distance_sort_buy[0];
                 cout << "rotate " << robot_idx << " " << robots[robot_idx]->platform_angular_velocity[fetch_index] << endl;
                 cout << "forward " << robot_idx << " " << robots[robot_idx]->platform_forward_velocity[fetch_index] << endl;
-                if (canBuyItem(robot_idx, fetch_index)) {
+                if (canBuyItem(robot_idx, fetch_index, money)) {
                     // 附加判断条件：剩余时间是否足够卖出物品
                     vector<pair<double, int>> distance_id_0;
                     int pending_item = platforms[fetch_index]->id;
@@ -438,7 +439,7 @@ void greedyAlg2(int frame_id) {
                 if (canSellItem(robot_idx, fetch_index)) {
                     cout << "sell " << robot_idx << endl;
                     // 卖出后判断是否可买入
-                    if (canBuyItem(robot_idx, fetch_index)) {
+                    if (canBuyItem(robot_idx, fetch_index, money)) {
                         // 附加判断条件：剩余时间是否足够卖出物品
                         vector<pair<double, int>> distance_id_0;
                         int pending_item = platforms[fetch_index]->id;
@@ -467,13 +468,13 @@ int main() {
     cout << "OK" << endl;
     cout << flush;
 
-    int frame_id;
-    while (scanf("%d", &frame_id) != EOF) {
+    int frame_id, money;
+    while (scanf("%d %d", &frame_id, &money) != EOF) {
         // 读入每一帧场面信息
         readFrameUntilOK();
 
         // 贪心算法
-        greedyAlg2(frame_id);
+        greedyAlg2(frame_id, money);
     }
     return 0;
 }
