@@ -1,5 +1,8 @@
-# CodeCraft-2023
-华为软件精英挑战赛2023
+# 2023华为软件精英挑战赛-初赛解题算法（C++）
+
+队名：丽岛食堂干净又卫生
+
+成员：[@iamywang](https://github.com/iamywang), [@2022create](https://github.com/2022create), [@HKZ994](https://github.com/HKZ994)
 
 ## 贪心算法介绍
 
