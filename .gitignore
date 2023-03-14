@@ -34,3 +34,4 @@
 # others
 build/
 .vscode/
+LinuxRelease/replay/
