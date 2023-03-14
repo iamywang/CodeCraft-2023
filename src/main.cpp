@@ -25,13 +25,16 @@
 // 3. 机器人是否在工作台判断距离（原始值为0.4）
 #define distance_within 0.4
 
+// 4. 贪心策略中，时间系数的估计值
+#define time_coefficient 0.9
+
 // 大地图 100*100 (0.5m*0.5m)
 vector<vector<char>> maps = vector<vector<char>>(100, vector<char>(100, '.'));
 void setRobotPlatformDistanceDirectionTime(int robot_id);
 
 // 机器人
 vector<Robot *> robots;
-map<pair<double, double>, int> robot_map;
+// map<pair<double, double>, int> robot_map;
 
 // 工作台
 vector<Platform *> platforms;
@@ -90,7 +93,7 @@ void readMapUntilOK() {
                 double center_y = 50 - double(current_row) * 0.5 - 0.25;
                 robots.push_back(new Robot(current_robot));
                 robots[current_robot]->position = make_pair(center_x, center_y);
-                robot_map.insert(make_pair(make_pair(center_x, center_y), current_robot));
+                // robot_map.insert(make_pair(make_pair(center_x, center_y), current_robot));
                 // cerr << "robot " << current_robot << " " << center_x << " " << center_y << endl;
                 current_robot++;
             }
@@ -388,29 +391,18 @@ void greedyAlg2(int frame_id) {
         int robot_item = robots[robot_idx]->item_type;
         if (robot_item == 0) {
             // 为0表示需要购买物品
-            // 排序策略1：按照距离远近排序
+            // 排序策略：按照距离/利润远近排序
             vector<pair<double, int>> distance_id_1;
             // 根据demand需求来分配是否可购买
             for (int item_idx = 1; item_idx <= 7; item_idx++) {
                 if (item_demand[item_idx].size() > 0 && available_demand[item_idx] > 0) {
                     for (int i = 0; i < item_supply[item_idx].size(); i++) {
-                        distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]], item_supply[item_idx][i]));
+                        // distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]], item_supply[item_idx][i]));
+                        distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]] / double(item_prices[item_idx].second * time_coefficient - item_prices[item_idx].first), item_supply[item_idx][i]));
                     }
                 }
             }
             robots[robot_idx]->platform_distance_sort_buy = sortDistance(distance_id_1);
-
-            // 排序策略2：按照售价排序
-            // for (int item_idx = 7; item_idx >= 1; item_idx--) {
-            //     vector<pair<double, int>> distance_id_1;
-            //     if (item_demand[item_idx].size() > 0 && available_demand[item_idx] > 0) {
-            //         for (int i = 0; i < item_supply[item_idx].size(); i++) {
-            //             distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]], item_supply[item_idx][i]));
-            //         }
-            //     }
-            //     vector<int> sort_distance = sortDistance(distance_id_1);
-            //     robots[robot_idx]->platform_distance_sort_buy.insert(robots[robot_idx]->platform_distance_sort_buy.end(), sort_distance.begin(), sort_distance.end());
-            // }
 
             // 根据距离进行购买
             if (robots[robot_idx]->platform_distance_sort_buy.size() > 0) {
