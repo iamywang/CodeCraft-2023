@@ -30,8 +30,7 @@
 #define time_coefficient 0.9
 
 // 大地图 100*100 (0.5m*0.5m)
-vector<vector<char>> maps = vector<vector<char>>(100, vector<char>(100, '.'));
-void setRobotPlatformDistanceDirectionTime(int robot_id);
+// vector<vector<char>> maps = vector<vector<char>>(100, vector<char>(100, '.'));
 
 // 机器人
 vector<Robot *> robots;
@@ -68,14 +67,13 @@ void readMapUntilOK() {
                 robots[i]->platform_rotate_frame = vector<double>(platforms.size(), 0);
                 robots[i]->platform_forward_velocity = vector<double>(platforms.size(), 0);
                 robots[i]->platform_forward_frame = vector<double>(platforms.size(), 0);
-                setRobotPlatformDistanceDirectionTime(i);
             }
             return;
         }
 
         // 保存地图信息到maps
         for (int i = 0; i < 100; i++) {
-            maps[current_row][i] = line[i];
+            // maps[current_row][i] = line[i];
 
             // 如果是工作台，保存工作台位置到platforms
             if (line[i] - '0' >= 1 && line[i] - '0' <= 9) {
@@ -383,13 +381,9 @@ void greedyAlg2(int frame_id, int money) {
     cout << frame_id << endl;
     cout << flush;
 
-    setRobotPlatformDistanceDirectionTime(0);
-    setRobotPlatformDistanceDirectionTime(1);
-    setRobotPlatformDistanceDirectionTime(2);
-    setRobotPlatformDistanceDirectionTime(3);
-
-    // 调度算法
+    // 每个机器人分别进行调度
     for (int robot_idx = 0; robot_idx <= 3; robot_idx++) {
+        setRobotPlatformDistanceDirectionTime(robot_idx);
         int robot_item = robots[robot_idx]->item_type;
         if (robot_item == 0) {
             // 为0表示需要购买物品
