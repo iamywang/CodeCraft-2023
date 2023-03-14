@@ -9,9 +9,10 @@
 // 可调整参数（好像真的有用）
 
 // 1. 速度过大撞墙问题，修正参数（原始值为1, 1）
-#define angle_fix 1
+#define angle_fix 0.99
 #define forward_fix 0.95
 #define wall_margin 3.5
+#define frame_margin 0
 
 // 2. 最大最小前进旋转速度（原始值为6, -2, pi, -pi）
 #define max_forward_speed 6
@@ -322,6 +323,8 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
                 robots[robot_id]->platform_angular_velocity[i] = max(0 - robots[robot_id]->angular_velocity, min_rotate_speed);
             robots[robot_id]->platform_rotate_frame[i] = 0;
         } else {
+            if (frame_direction < frame_margin)
+                robots[robot_id]->platform_angular_velocity[i] = max(0 - robots[robot_id]->angular_velocity, min_rotate_speed);
             robots[robot_id]->platform_angular_velocity[i] = delta_direction / time_direction * angle_fix;
             robots[robot_id]->platform_rotate_frame[i] = frame_direction;
         }
@@ -344,7 +347,10 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
                 robots[robot_id]->platform_forward_velocity[i] = max(0 - line_speed, double(min_forward_speed));
             robots[robot_id]->platform_forward_frame[i] = 0;
         } else {
-            robots[robot_id]->platform_forward_velocity[i] = distance / time_move * forward_fix;
+            if (frame_move < frame_margin)
+                robots[robot_id]->platform_forward_velocity[i] = max(0 - line_speed, double(min_forward_speed));
+            else
+                robots[robot_id]->platform_forward_velocity[i] = distance / time_move * forward_fix;
             robots[robot_id]->platform_forward_frame[i] = frame_move;
         }
     }
@@ -398,7 +404,7 @@ void greedyAlg2(int frame_id) {
             robots[robot_idx]->platform_distance_sort_buy = sortDistance(distance_id_1);
 
             // 排序策略2：按照售价排序
-            // for (int item_idx = 1; item_idx <= 7; item_idx++) {
+            // for (int item_idx = 7; item_idx >= 1; item_idx--) {
             //     vector<pair<double, int>> distance_id_1;
             //     if (item_demand[item_idx].size() > 0 && available_demand[item_idx] > 0) {
             //         for (int i = 0; i < item_supply[item_idx].size(); i++) {
