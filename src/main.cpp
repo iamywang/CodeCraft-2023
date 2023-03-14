@@ -221,48 +221,22 @@ void initItemPricesRecipes() {
     item_recipes.insert(make_pair(9, 254));
 }
 
-// 判断工作台能否接收物品
-bool canSellItem(int robot_id, int platform_id) {
-    // 机器人是否有物品
-    if (robots[robot_id]->item_type == 0)
-        return false;
-    // 工作台能否接收物品
-    if (item_recipes.find(platforms[platform_id]->id) != item_recipes.end()) {
-        // 工作台能接收物品
-        // 判断工作台是否已经有该物品
-        if (platforms[platform_id]->material_state & (1 << robots[robot_id]->item_type) == 1)
-            return false;
-        // 判断机器人是否离工作台最近
-        if (robots[robot_id]->platform_id == platform_id)
-            return true;
-        return false;
-    }
-    return false;
+// f函数
+double fFunction(double x, double maxX, double minRate) {
+    if (x < maxX)
+        return (1 - sqrt(1 - (x / maxX) * (x / maxX))) * (1 - minRate) + minRate;
+    else
+        return minRate;
 }
 
-// 判断机器人能否购买物品
-bool canBuyItem(int robot_id, int platform_id, int money) {
-    // 机器人是否有物品
-    if (robots[robot_id]->item_type != 0)
-        return false;
-    // 工作台能否出售物品
-    if (platforms[platform_id]->remain_time == 0 || platforms[platform_id]->product_state == 1) {
-        // 工作台能出售物品
-        // 判断机器人是否离工作台最近
-        if (robots[robot_id]->platform_id == platform_id)
-            if (money > item_prices.find(platforms[platform_id]->id)->second.first)
-                return true;
-        return false;
-    }
-    return false;
+// 计算时间价值系数
+double getTimeValue(int frame_num) {
+    return fFunction(frame_num, 9000, 0.8);
 }
 
-// 获取x,y对应的地图信息
-pair<int, int> getMapInfo(double x, double y) {
-    int row = int(x * 2);
-    int col = int(100 - y * 2);
-    // cerr << "getMapInfo " << x << " " << y << " " << row << " " << col << endl;
-    return make_pair(row, col);
+// 计算碰撞价值系数
+double getCollisionValue(double impulse) {
+    return fFunction(impulse, 1000, 0.8);
 }
 
 // 计算机器人质量
@@ -356,22 +330,50 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
     }
 }
 
-// f函数
-double fFunction(double x, double maxX, double minRate) {
-    if (x < maxX)
-        return (1 - sqrt(1 - (x / maxX) * (x / maxX))) * (1 - minRate) + minRate;
-    else
-        return minRate;
+// 判断工作台能否接收物品
+bool canSellItem(int robot_id, int platform_id) {
+    // 机器人是否有物品
+    if (robots[robot_id]->item_type == 0)
+        return false;
+    // 工作台能否接收物品
+    if (item_recipes.find(platforms[platform_id]->id) != item_recipes.end()) {
+        // 工作台能接收物品
+        // 判断工作台是否已经有该物品
+        if (platforms[platform_id]->material_state & (1 << robots[robot_id]->item_type) == 1)
+            return false;
+        // 判断机器人是否离工作台最近
+        if (robots[robot_id]->platform_id == platform_id)
+            return true;
+        return false;
+    }
+    return false;
 }
 
-// 计算时间价值系数
-double getTimeValue(int frame_num) {
-    return fFunction(frame_num, 9000, 0.8);
-}
-
-// 计算碰撞价值系数
-double getCollisionValue(double impulse) {
-    return fFunction(impulse, 1000, 0.8);
+// 判断机器人能否购买物品
+bool canBuyItem(int frame_id, int robot_id, int platform_id, int money) {
+    // 机器人是否有物品
+    if (robots[robot_id]->item_type != 0)
+        return false;
+    // 工作台能否出售物品
+    if (platforms[platform_id]->remain_time == 0 || platforms[platform_id]->product_state == 1) {
+        // 工作台能出售物品
+        // 判断机器人是否离工作台最近
+        if (robots[robot_id]->platform_id == platform_id)
+            if (money > item_prices.find(platforms[platform_id]->id)->second.first) {
+                // 附加判断条件：剩余时间是否足够卖出物品
+                vector<pair<double, int>> distance_id_0;
+                int pending_item = platforms[platform_id]->id;
+                for (int i = 0; i < item_demand[pending_item].size(); i++) {
+                    distance_id_0.push_back(make_pair(robots[robot_id]->platform_distance[item_demand[pending_item][i]], item_demand[pending_item][i]));
+                }
+                robots[robot_id]->platform_distance_sort_sell = sortDistance(distance_id_0);
+                if (frame_id + robots[robot_id]->platform_forward_frame[robots[robot_id]->platform_distance_sort_sell[0]] <= max_frames)
+                    return true;
+                return false;
+            }
+        return false;
+    }
+    return false;
 }
 
 // 贪心算法
@@ -405,16 +407,8 @@ void greedyAlg2(int frame_id, int money) {
                 int fetch_index = robots[robot_idx]->platform_distance_sort_buy[0];
                 cout << "rotate " << robot_idx << " " << robots[robot_idx]->platform_angular_velocity[fetch_index] << endl;
                 cout << "forward " << robot_idx << " " << robots[robot_idx]->platform_forward_velocity[fetch_index] << endl;
-                if (canBuyItem(robot_idx, fetch_index, money)) {
-                    // 附加判断条件：剩余时间是否足够卖出物品
-                    vector<pair<double, int>> distance_id_0;
-                    int pending_item = platforms[fetch_index]->id;
-                    for (int i = 0; i < item_demand[pending_item].size(); i++) {
-                        distance_id_0.push_back(make_pair(robots[robot_idx]->platform_distance[item_demand[pending_item][i]], item_demand[pending_item][i]));
-                    }
-                    robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0);
-                    if (frame_id + robots[robot_idx]->platform_forward_frame[robots[robot_idx]->platform_distance_sort_sell[0]] <= max_frames)
-                        cout << "buy " << robot_idx << endl;
+                if (canBuyItem(frame_id, robot_idx, fetch_index, money)) {
+                    cout << "buy " << robot_idx << endl;
                     available_demand[platforms[fetch_index]->id]--;
                 }
             }
@@ -433,18 +427,9 @@ void greedyAlg2(int frame_id, int money) {
                 if (canSellItem(robot_idx, fetch_index)) {
                     cout << "sell " << robot_idx << endl;
                     // 卖出后判断是否可买入
-                    if (canBuyItem(robot_idx, fetch_index, money)) {
-                        // 附加判断条件：剩余时间是否足够卖出物品
-                        vector<pair<double, int>> distance_id_0;
-                        int pending_item = platforms[fetch_index]->id;
-                        for (int i = 0; i < item_demand[pending_item].size(); i++) {
-                            distance_id_0.push_back(make_pair(robots[robot_idx]->platform_distance[item_demand[pending_item][i]], item_demand[pending_item][i]));
-                        }
-                        robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0);
-                        if (frame_id + robots[robot_idx]->platform_forward_frame[robots[robot_idx]->platform_distance_sort_sell[0]] <= max_frames) {
-                            cout << "buy " << robot_idx << endl;
-                            available_demand[platforms[fetch_index]->id]--;
-                        }
+                    if (canBuyItem(frame_id, robot_idx, fetch_index, money)) {
+                        cout << "buy " << robot_idx << endl;
+                        available_demand[platforms[fetch_index]->id]--;
                     }
                 }
             }
