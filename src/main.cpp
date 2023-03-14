@@ -5,6 +5,7 @@
 #define radius_with 0.53
 #define density 20
 #define ignore_sub 1e-6
+#define max_frames 9000
 
 // 牵引力和力矩
 #define force 250
@@ -410,7 +411,15 @@ void greedyAlg2(int frame_id) {
                 cout << "rotate " << robot_idx << " " << robots[robot_idx]->platform_angular_velocity[fetch_index] << endl;
                 cout << "forward " << robot_idx << " " << robots[robot_idx]->platform_forward_velocity[fetch_index] << endl;
                 if (canBuyItem(robot_idx, fetch_index)) {
-                    cout << "buy " << robot_idx << endl;
+                    // 附加判断条件：剩余时间是否足够卖出物品
+                    vector<pair<double, int>> distance_id_0;
+                    int pending_item = platforms[fetch_index]->id;
+                    for (int i = 0; i < item_demand[pending_item].size(); i++) {
+                        distance_id_0.push_back(make_pair(robots[robot_idx]->platform_distance[item_demand[pending_item][i]], item_demand[pending_item][i]));
+                    }
+                    robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0);
+                    if (frame_id + robots[robot_idx]->platform_forward_frame[robots[robot_idx]->platform_distance_sort_sell[0]] <= max_frames)
+                        cout << "buy " << robot_idx << endl;
                     available_demand[platforms[fetch_index]->id]--;
                 }
             }
@@ -430,8 +439,17 @@ void greedyAlg2(int frame_id) {
                     cout << "sell " << robot_idx << endl;
                     // 卖出后判断是否可买入
                     if (canBuyItem(robot_idx, fetch_index)) {
-                        cout << "buy " << robot_idx << endl;
-                        available_demand[platforms[fetch_index]->id]--;
+                        // 附加判断条件：剩余时间是否足够卖出物品
+                        vector<pair<double, int>> distance_id_0;
+                        int pending_item = platforms[fetch_index]->id;
+                        for (int i = 0; i < item_demand[pending_item].size(); i++) {
+                            distance_id_0.push_back(make_pair(robots[robot_idx]->platform_distance[item_demand[pending_item][i]], item_demand[pending_item][i]));
+                        }
+                        robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0);
+                        if (frame_id + robots[robot_idx]->platform_forward_frame[robots[robot_idx]->platform_distance_sort_sell[0]] <= max_frames) {
+                            cout << "buy " << robot_idx << endl;
+                            available_demand[platforms[fetch_index]->id]--;
+                        }
                     }
                 }
             }
