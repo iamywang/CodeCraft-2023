@@ -8,11 +8,39 @@
 
 ### 变量说明
 
+部分全局变量：
 - map<int, pair<int, int>> item_prices: <物品编号, <买入价格, 原始出售价格>>
 - map<int, int> item_recipes: <工作台编号, 所需物品二进制格表示>
 - map<int, vector<int>> item_demand: <物品编号, [当前帧能够接收这种物品的工作台列表]>
 - map<int, int> available_demand: <物品编号, 当前帧能够接收这种物品的工作台数量-机器人已经买入过该类物品的数量>
 - map<int, vector<int>> item_supply: <物品编号, [当前帧机器人能够从哪些工作台购买该物品]>
+
+Robot结构体基本变量：
+- int id: 机器人编号
+- int platform_id: 机器人所在工作台编号
+- int item_type: 机器人持有物品编号
+- double time_value: 当前时间损失系数
+- double collision_value: 当前碰撞损失系数
+- double angular_velocity: 当前旋转角速度
+- pair<double, double> linear_velocity: 当前线速度
+- double orientation: 当前方向
+- pair<double, double> position: 当前位置
+
+Robot结构体扩展变量：
+- vector<double> platform_distance: [机器人到每个工作台的直线距离]
+- vector<double> platform_angular_velocity: [机器人到每个工作台的最优角速度]
+- vector<double> platform_rotate_frame: [机器人到每个工作台的最优角速度下的旋转帧数]
+- vector<double> platform_forward_velocity: [机器人到每个工作台的最优线速度]
+- vector<double> platform_forward_frame: [机器人到每个工作台的最优线速度下的移动帧数]
+- vector<int> platform_distance_sort_buy: [机器人到每个工作台的直线距离排序（根据要购买的物品编号）]
+- vector<int> platform_distance_sort_sell: [机器人到每个工作台的直线距离排序（根据要出售的物品编号）]
+
+Platform (Workbench)结构体基本变量：
+- int id: 工作台编号
+- pair<double, double> position: 工作台位置
+- int remain_time: 工作台剩余生产时间
+- int material_state: 工作台原材料状态
+- int product_state: 工作台产品状态
 
 ### 可调整参数
 速度过大撞墙问题，角速度与线速度修正参数：
