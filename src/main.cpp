@@ -324,10 +324,10 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
 
         // 更新机器人到工作台的前进速度和前进时间
         if (frame_move < ignore_sub) {
-            if (robots[robot_id]->position.first < wall_margin || robots[robot_id]->position.first > 50 - wall_margin ||
-                robots[robot_id]->position.second < wall_margin || robots[robot_id]->position.second > 50 - wall_margin)
-                robots[robot_id]->platform_forward_velocity[i] = min_forward_speed;
-            else
+            // if (robots[robot_id]->position.first < wall_margin || robots[robot_id]->position.first > 50 - wall_margin ||
+            //     robots[robot_id]->position.second < wall_margin || robots[robot_id]->position.second > 50 - wall_margin)
+            //     robots[robot_id]->platform_forward_velocity[i] = min_forward_speed;
+            // else
                 robots[robot_id]->platform_forward_velocity[i] = max(0 - line_speed, double(min_forward_speed));
             robots[robot_id]->platform_forward_frame[i] = 0;
         } else {
