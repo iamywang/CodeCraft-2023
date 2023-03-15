@@ -5,7 +5,6 @@
 #define radius_with 0.53
 #define density 20
 #define ignore_sub 1e-6
-#define max_frames 8900
 
 // 牵引力和力矩
 #define force 250
@@ -28,6 +27,9 @@
 
 // 4. 贪心策略中，时间系数的估计值
 #define time_coefficient 0.9
+
+// 5. 帧数上限，解决购买后时间不足以出售的问题
+#define max_frames 8900
 
 // 大地图 100*100 (0.5m*0.5m)
 // vector<vector<char>> maps = vector<vector<char>>(100, vector<char>(100, '.'));
@@ -377,8 +379,9 @@ bool canBuyItem(int frame_id, int robot_id, int platform_id, int money) {
 }
 
 // 贪心算法
-// 1. 机器人每次找离自己最近的可接收物品
-// 2. 并送给离自己最近的可接收的平台
+// 1. 机器人每次找离自己最近的可购买的物品
+// 2. 并将该物品出售到离自己最近的（购买后）可接收的平台
+// 3. 为了解决最后购买后无法出售的情况，当发现剩余时间无法出售时，不再购买
 void greedyAlg2(int frame_id, int money) {
     cout << frame_id << endl;
     cout << flush;
