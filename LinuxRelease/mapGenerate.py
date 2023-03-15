@@ -6,7 +6,7 @@ save_map_dir = "./maps/"
 if not os.path.exists(save_map_dir):
     os.makedirs(save_map_dir)
 ###########################################
-num_map = 10  # 一次性生成数量
+num_map = 100  # 一次性生成数量
 ###########################################
 for _ in range(num_map):
     # init

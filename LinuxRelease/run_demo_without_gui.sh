@@ -1,18 +1,6 @@
 #!/bin/sh
 cd "$( dirname "$0" )"
-# read v1 <<< $(./Robot -f -l ERR ../build/main -m maps/1.txt | jq -r '.score')
-# read v2 <<< $(./Robot -f -l ERR ../build/main -m maps/2.txt | jq -r '.score')
-# read v3 <<< $(./Robot -f -l ERR ../build/main -m maps/3.txt | jq -r '.score')
-# read v4 <<< $(./Robot -f -l ERR ../build/main -m maps/4.txt | jq -r '.score')
-# echo $v1, $v2, $v3, $v4, total: $(($v1+$v2+$v3+$v4))
-read v1 <<< $(./Robot -f -l ERR ../build/main -m maps/map0.txt | jq -r '.score')
-read v2 <<< $(./Robot -f -l ERR ../build/main -m maps/map1.txt | jq -r '.score')
-read v3 <<< $(./Robot -f -l ERR ../build/main -m maps/map2.txt | jq -r '.score')
-read v4 <<< $(./Robot -f -l ERR ../build/main -m maps/map3.txt | jq -r '.score')
-read v5 <<< $(./Robot -f -l ERR ../build/main -m maps/map4.txt | jq -r '.score')
-read v6 <<< $(./Robot -f -l ERR ../build/main -m maps/map5.txt | jq -r '.score')
-read v7 <<< $(./Robot -f -l ERR ../build/main -m maps/map6.txt | jq -r '.score')
-read v8 <<< $(./Robot -f -l ERR ../build/main -m maps/map7.txt | jq -r '.score')
-read v9 <<< $(./Robot -f -l ERR ../build/main -m maps/map8.txt | jq -r '.score')
-read v10 <<< $(./Robot -f -l ERR ../build/main -m maps/map9.txt | jq -r '.score')
-echo $v1, $v2, $v3, $v4, $v5, $v6, $v7, $v8, $v9, $v10, total: $(($v1+$v2+$v3+$v4+$v5+$v6+$v7+$v8+$v9+$v10))
+./Robot -f -l ERR ../build/main -m maps/1.txt
+./Robot -f -l ERR ../build/main -m maps/2.txt
+./Robot -f -l ERR ../build/main -m maps/3.txt
+./Robot -f -l ERR ../build/main -m maps/4.txt
