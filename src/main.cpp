@@ -179,6 +179,7 @@ void readFrameUntilOK() {
         // int map_index = robot_map.find(make_pair(position_x, position_y))->second;
         robots[map_index]->platform_id = platform_id;
         robots[map_index]->item_type = item_type;
+        available_demand[item_type]--;// 如果机器人手上有物品，那么需求就会减小，解决自闭问题
         robots[map_index]->time_value = time_value;
         robots[map_index]->collision_value = collision_value;
         if (item_type == 0) {
@@ -287,6 +288,15 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         double current_direction = robots[robot_id]->orientation;     // 范围为-pi到pi
         double target_direction = atan2(y1 - y, x1 - x);              // 范围为-pi到pi
         double delta_direction = target_direction - current_direction;// 正数表示逆时针旋转，负数表示顺时针旋转
+
+        // 如果工作台靠墙，那么多转90度
+        // if (x1 < 1.5 || x1 > 48.5 || y1 < 1.5 || y1 > 48.5) {
+        //     if (delta_direction > 0)
+        //         delta_direction = pi / 3;
+        //     else
+        //         delta_direction = -pi / 3;
+        // }
+
         if (abs(delta_direction) < ignore_sub) {
             delta_direction = 0;
         }
