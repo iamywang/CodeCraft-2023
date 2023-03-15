@@ -398,8 +398,10 @@ void greedyAlg2(int frame_id, int money) {
             for (int item_idx = 1; item_idx <= 7; item_idx++) {
                 if (item_demand[item_idx].size() > 0 && available_demand[item_idx] > 0) {
                     for (int i = 0; i < item_supply[item_idx].size(); i++) {
-                        // distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]], item_supply[item_idx][i]));
-                        distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]] / double(item_prices[item_idx].second * time_coefficient - item_prices[item_idx].first), item_supply[item_idx][i]));
+                        double distance_param = robots[robot_idx]->platform_distance[item_supply[item_idx][i]];
+                        double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
+                        distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
+                        // distance_id_1.push_back(make_pair(distance_param / loss_param, item_supply[item_idx][i]));
                     }
                 }
             }
@@ -437,6 +439,15 @@ void greedyAlg2(int frame_id, int money) {
                 }
             }
         }
+
+        // 判断是否撞墙（考虑朝向）
+        // if ((robots[robot_idx]->position.first < 0.65 && (robots[robot_idx]->orientation >= 0.5 * pi && robots[robot_idx]->orientation <= 1 * pi || robots[robot_idx]->orientation >= -1 * pi && robots[robot_idx]->orientation <= -0.5 * pi)) ||
+        //     (robots[robot_idx]->position.first > 49.35 && (robots[robot_idx]->orientation >= 0 * pi && robots[robot_idx]->orientation <= 0.5 * pi || robots[robot_idx]->orientation >= -0.5 * pi && robots[robot_idx]->orientation <= -0 * pi)) ||
+        //     (robots[robot_idx]->position.second < 0.65 && (robots[robot_idx]->orientation >= -1 * pi && robots[robot_idx]->orientation <= -0 * pi)) ||
+        //     (robots[robot_idx]->position.second > 49.35 && (robots[robot_idx]->orientation >= 0 * pi && robots[robot_idx]->orientation <= 1 * pi))) {
+        //     cout << "rotate " << robot_idx << " " << min_rotate_speed << endl;
+        //     cout << "forward " << robot_idx << " " << min_forward_speed << endl;
+        // }
     }
 
     cout << "OK" << endl;
