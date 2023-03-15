@@ -5,7 +5,7 @@
 #define radius_with 0.53
 #define density 20
 #define ignore_sub 1e-6
-#define max_frames 9000
+#define max_frames 8900
 
 // 牵引力和力矩
 #define force 250
@@ -297,6 +297,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
             // 判断是否撞墙
             if (robots[robot_id]->position.first < wall_margin || robots[robot_id]->position.first > 50 - wall_margin ||
                 robots[robot_id]->position.second < wall_margin || robots[robot_id]->position.second > 50 - wall_margin)
+                // int a = 0;
                 robots[robot_id]->platform_angular_velocity[i] = min_rotate_speed;
             else
                 robots[robot_id]->platform_angular_velocity[i] = max(0 - robots[robot_id]->angular_velocity, min_rotate_speed);
@@ -395,8 +396,8 @@ void greedyAlg2(int frame_id, int money) {
             for (int item_idx = 1; item_idx <= 7; item_idx++) {
                 if (item_demand[item_idx].size() > 0 && available_demand[item_idx] > 0) {
                     for (int i = 0; i < item_supply[item_idx].size(); i++) {
-                        // distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]], item_supply[item_idx][i]));
-                        distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]] / double(item_prices[item_idx].second * time_coefficient - item_prices[item_idx].first), item_supply[item_idx][i]));
+                        distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]], item_supply[item_idx][i]));
+                        // distance_id_1.push_back(make_pair(robots[robot_idx]->platform_distance[item_supply[item_idx][i]] / double(item_prices[item_idx].second * time_coefficient - item_prices[item_idx].first), item_supply[item_idx][i]));
                     }
                 }
             }
