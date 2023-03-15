@@ -236,7 +236,7 @@ void initItemPricesRecipes() {
 // f函数
 double fFunction(double x, double maxX, double minRate) {
     if (x < maxX)
-        return (1 - sqrt(1 - (x / maxX) * (x / maxX))) * (1 - minRate) + minRate;
+        return (1 - sqrt(1 - (1 - x / maxX) * (1 - x / maxX))) * (1 - minRate) + minRate;
     else
         return minRate;
 }
