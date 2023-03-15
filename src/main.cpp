@@ -12,8 +12,8 @@
 
 // 可调整参数（好像真的有用）
 // 1. 速度过大撞墙问题，修正参数（原始值为1, 1）
-#define angle_fix 0.99
-#define forward_fix 0.95
+#define angle_fix 1
+#define forward_fix 1
 #define wall_margin 3.5
 
 // 2. 最大最小前进旋转速度（原始值为6, -2, pi, -pi）
@@ -289,14 +289,6 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         double target_direction = atan2(y1 - y, x1 - x);              // 范围为-pi到pi
         double delta_direction = target_direction - current_direction;// 正数表示逆时针旋转，负数表示顺时针旋转
 
-        // 如果工作台靠墙，那么多转90度
-        // if (x1 < 1.5 || x1 > 48.5 || y1 < 1.5 || y1 > 48.5) {
-        //     if (delta_direction > 0)
-        //         delta_direction = pi / 3;
-        //     else
-        //         delta_direction = -pi / 3;
-        // }
-
         if (abs(delta_direction) < ignore_sub) {
             delta_direction = 0;
         }
@@ -410,8 +402,8 @@ void greedyAlg2(int frame_id, int money) {
                     for (int i = 0; i < item_supply[item_idx].size(); i++) {
                         double distance_param = robots[robot_idx]->platform_distance[item_supply[item_idx][i]];
                         double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
-                        distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
-                        // distance_id_1.push_back(make_pair(distance_param / loss_param, item_supply[item_idx][i]));
+                        // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
+                        distance_id_1.push_back(make_pair(distance_param / loss_param, item_supply[item_idx][i]));
                     }
                 }
             }
