@@ -54,6 +54,7 @@ map<int, int> available_demand;
 
 // 当前帧每种物品的提供量（按照编号为1-7）
 map<int, vector<int>> item_supply;
+// map<int, vector<int>> item_pending;
 
 double total_cost = 0;
 double total_sold = 0;
@@ -118,10 +119,12 @@ void readFrameUntilOK() {
     item_demand = map<int, vector<int>>();
     available_demand = map<int, int>();
     item_supply = map<int, vector<int>>();
+    // item_pending = map<int, vector<int>>();
     for (int i = 1; i <= 7; i++) {
         item_demand.insert(make_pair(i, vector<int>()));
         available_demand.insert(make_pair(i, 0));
         item_supply.insert(make_pair(i, vector<int>()));
+        // item_pending.insert(make_pair(i, vector<int>()));
     }
 
     // 第二行: 工作台数量
@@ -164,6 +167,9 @@ void readFrameUntilOK() {
         if (platforms[map_index]->remain_time == 0 || platforms[map_index]->product_state != 0) {
             item_supply[platform_id].push_back(map_index);
         }
+        // else {
+        // item_pending[platform_id].push_back(map_index);
+        // }
     }
 
     // 最后四行: 机器人状态, 工作台ID, 物品类型, 时间价值系数, 碰撞价值系数, 角速度, 线速度, 朝向, 坐标
@@ -328,7 +334,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
             //     robots[robot_id]->position.second < wall_margin || robots[robot_id]->position.second > 50 - wall_margin)
             //     robots[robot_id]->platform_forward_velocity[i] = min_forward_speed;
             // else
-                robots[robot_id]->platform_forward_velocity[i] = max(0 - line_speed, double(min_forward_speed));
+            robots[robot_id]->platform_forward_velocity[i] = max(0 - line_speed, double(min_forward_speed));
             robots[robot_id]->platform_forward_frame[i] = 0;
         } else {
             robots[robot_id]->platform_forward_velocity[i] = distance / time_move * forward_fix;
