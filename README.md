@@ -51,7 +51,7 @@ Platform (Workbench)结构体基本变量：
 - #define wall_margin 4
 
 机器人是否在工作台判断距离（原始值为0.4）：
-- #define distance_within 0.4
+- #define distance_within 0.38
 
 贪心策略中，时间系数的估计值：
 - #define time_coefficient 0.9
@@ -74,8 +74,8 @@ Platform (Workbench)结构体基本变量：
     - 选择策略：选择第一个满足条件的工作台，出售后立即判断是否能够买入
 
 - 目前结果
-    - 排序策略1：练习赛分数2119593（wall_margin 3.5）
-    - 排序策略2：练习赛分数2192480（wall_margin 4）
+    - 排序策略1：练习赛分数2119593（wall_margin 3.5，距离0.4）
+    - 排序策略2：练习赛分数2231266（wall_margin 4，距离0.38）
 
 ### 优化策略
 
