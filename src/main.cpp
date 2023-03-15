@@ -55,6 +55,9 @@ map<int, int> available_demand;
 // 当前帧每种物品的提供量（按照编号为1-7）
 map<int, vector<int>> item_supply;
 
+// double total_cost = 0;
+// double total_sold = 0;
+
 // 读入地图
 void readMapUntilOK() {
     int current_row = 0;
@@ -433,6 +436,8 @@ void greedyAlg2(int frame_id, int money) {
                 cout << "forward " << robot_idx << " " << robots[robot_idx]->platform_forward_velocity[fetch_index] << endl;
                 if (canSellItem(robot_idx, fetch_index)) {
                     cout << "sell " << robot_idx << endl;
+                    // total_cost += robots[robot_idx]->time_value * robots[robot_idx]->collision_value;
+                    // total_sold++;
                     // 卖出后判断是否可买入
                     if (canBuyItem(frame_id, robot_idx, fetch_index, money)) {
                         cout << "buy " << robot_idx << endl;
@@ -471,5 +476,9 @@ int main() {
         // 贪心算法
         greedyAlg2(frame_id, money);
     }
+
+    // cerr << "total_cost: " << total_cost << endl;
+    // cerr << "total_sold: " << total_sold << endl;
+    // cerr << "total_coff: " << total_cost / total_sold << endl;
     return 0;
 }
