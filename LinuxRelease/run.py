@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # 遍历maps目录下所有地图（文件名为map0.txt、map1.txt...）
     file_lists = []
     for each_map in os.listdir("./maps"):
-        if each_map.startswith("map"):
+        if not each_map.startswith("map"):
             file_lists.append(each_map)
 
     # 总分统计

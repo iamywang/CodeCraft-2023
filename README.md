@@ -43,15 +43,9 @@ Platform (Workbench)结构体基本变量：
 - int product_state: 工作台产品状态
 
 ### 可调整参数
-速度过大撞墙问题，角速度与线速度修正参数：
-- #define angle_fix 1
-- #define forward_fix 1
-
-速度过大撞墙问题，机器人与墙壁的间距：
-- #define wall_margin 3.5
 
 机器人是否在工作台判断距离（原始值为0.4）：
-- #define distance_within 0.35
+- #define distance_within 0.4
 
 贪心策略中，时间系数的估计值：
 - #define time_coefficient 0.9
@@ -75,7 +69,7 @@ Platform (Workbench)结构体基本变量：
 
 - 目前结果
     - 排序策略1：练习赛分数2119593（wall_margin 3.5，距离0.4）
-    - 排序策略2：练习赛分数2306366（wall_margin 3.5，距离0.35）
+    - 排序策略2：练习赛分数2524020（距离0.4）
 
 ### 优化策略
 
@@ -91,7 +85,6 @@ Platform (Workbench)结构体基本变量：
     - 两者同时调整，似乎没发现什么问题（虽然有时可能会有行星旋转的情况）
 - 撞墙问题：
     - 解决方式是机器人到达预期位置附近，发现快要撞墙时（与四周的间距），将线速度与角速度的预期值设置为允许的负数值，使得机器人能够在撞墙前停下来
-    - 目前该间距设置为3.5，可以根据实际情况调整
     - 如果没有发现撞墙，就设置为max(0 - line_speed, double(min_forward_speed))
 - 剩余时间无法满足出售的问题：
     - 设置帧数上限（检测剩余时间无法前进到下一个工作台时，不再购买当前物品）

@@ -16,8 +16,6 @@
 #define max_rotate_speed pi
 #define min_rotate_speed -pi
 
-
-
 // 可调整参数（好像真的有用）
 // 1. 机器人是否在工作台判断距离（原始值为0.4）
 #define distance_within 0.4
@@ -26,7 +24,7 @@
 #define time_coefficient 0.9
 
 // 3. 帧数上限，解决购买后时间不足以出售的问题
-#define max_frames 8900
+#define max_frames 8980
 
 // 大地图 100*100 (0.5m*0.5m)
 // vector<vector<char>> maps = vector<vector<char>>(100, vector<char>(100, '.'));
@@ -413,7 +411,6 @@ bool canBuyItem(int frame_id, int robot_id, int platform_id, int money) {
     return false;
 }
 
-int global_robot = -1;
 // 贪心算法
 // 1. 机器人每次找离自己最近的可购买的物品
 // 2. 并将该物品出售到离自己最近的（购买后）可接收的平台
