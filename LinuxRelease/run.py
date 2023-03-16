@@ -25,16 +25,16 @@ if __name__ == "__main__":
                               prog1 + " -m maps/{}".format(each_map)).read()
         # json解析，找score字段
         score_map1 = stdout_map1.split("\"score\":")[1].split("}")[0]
-        # print("地图{}的得分为：{}".format(each_map, score_map))
+        print("地图{}的得分为：{}".format(each_map, score_map1))
         score_list1[idx] = score_map1
 
         # 将标准输出读入
-        # stdout_map2 = os.popen("./Robot -f -l ERR " +
-        #                       prog2 + " -m maps/{}".format(each_map)).read()
-        # # json解析，找score字段
-        # score_map2 = stdout_map2.split("\"score\":")[1].split("}")[0]
-        # print("地图{}的得分为：{}".format(each_map, score_map))
-        score_list2[idx] = score_map1
+        stdout_map2 = os.popen("./Robot -f -l ERR " +
+                              prog2 + " -m maps/{}".format(each_map)).read()
+        # json解析，找score字段
+        score_map2 = stdout_map2.split("\"score\":")[1].split("}")[0]
+        print("地图{}的得分为：{}".format(each_map, score_map2))
+        score_list2[idx] = score_map2
 
     # 计算平均分和总分
     print("user总分为：{}".format(np.sum(score_list1)))

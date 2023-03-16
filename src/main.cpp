@@ -18,10 +18,10 @@
 
 // 可调整参数（好像真的有用）
 // 1. 机器人是否在工作台判断距离（原始值为0.4）
-#define distance_within 0.4
+#define distance_within 0.2
 
 // 2. 贪心策略中，时间系数的估计值
-#define time_coefficient 0.9
+double time_coefficient = 0.9;
 
 // 3. 帧数上限，解决购买后时间不足以出售的问题
 #define max_frames 8980
@@ -328,28 +328,19 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
 
         // 计算转弯半径所需的速度，除了机器人圆心离墙壁的距离，还需要考虑机器人半径
         double current_robot_radius = robots[robot_id]->item_type == 0 ? radius_without : radius_with;
-        double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first + current_robot_radius) * 0.5, (robots[robot_id]->position.second + current_robot_radius) * 0.5));
+        double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
 
         // 计算线速度的加速度
         double linear_acceleration = force / getRobotMass(robot_id);
 
-        // 当前速度加速到最大速度的时间
-        double time_acceleration = (max_forward_speed - line_speed) / linear_acceleration;
+        // 从当前速度减到减速速度的时间
+        double time_deceleration_current = (line_speed - decelerate_speed) / linear_acceleration;
 
-        // 当前速度加速到最大速度所需的距离
-        double distance_acceleration = line_speed * time_acceleration + 0.5 * time_acceleration * (max_forward_speed - line_speed);
-
-        // 从最大速度减速到减速速度的时间
-        double time_deceleration = (max_forward_speed - decelerate_speed) / linear_acceleration;
-
-        // 最大速度减速到减速速度所需的距离
-        double distance_deceleration = decelerate_speed * time_deceleration + 0.5 * time_acceleration * (max_forward_speed - decelerate_speed);
-
-        // 匀速运动的距离
-        double distance_constant = distance - distance_acceleration - distance_deceleration;
+        // 当前速度减到减速速度所需的距离
+        double distance_deceleration_current = decelerate_speed * time_deceleration_current + 0.5 * time_deceleration_current * (line_speed - decelerate_speed);
 
         // 总时间
-        double time_move = time_acceleration + time_acceleration + distance_constant / max_forward_speed;
+        double time_move = distance / line_speed;
         double frame_move = ceil(time_move * fps);// 最小移动帧数（向上取整）
         time_move = frame_move / fps;             // 最小移动时间（秒）
 
@@ -357,7 +348,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         if (frame_move < ignore_sub) {
             robots[robot_id]->platform_forward_velocity[i] = decelerate_speed;
             robots[robot_id]->platform_forward_frame[i] = 0;
-        } else if (distance <= distance_constant + max_forward_speed * 0.02) {
+        } else if (distance <= distance_deceleration_current + line_speed * 0.02) {
             robots[robot_id]->platform_forward_velocity[i] = decelerate_speed;
             robots[robot_id]->platform_forward_frame[i] = frame_move;
         } else {
@@ -468,6 +459,8 @@ void greedyAlg2(int frame_id, int money) {
                     cout << "sell " << robot_idx << endl;
                     total_cost += robots[robot_idx]->time_value * robots[robot_idx]->collision_value;
                     total_sold++;
+                    time_coefficient = double(total_sold) / double(total_cost);
+
                     // 卖出后判断是否可买入
                     if (canBuyItem(frame_id, robot_idx, fetch_index, money)) {
                         cout << "buy " << robot_idx << endl;
