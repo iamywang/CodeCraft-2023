@@ -14,7 +14,7 @@
 // 1. 速度过大撞墙问题，修正参数（原始值为1, 1）
 #define angle_fix 1
 #define forward_fix 1
-#define wall_margin 3.5
+#define wall_margin 0
 
 // 2. 最大最小前进旋转速度（原始值为6, -2, pi, -pi）
 #define max_forward_speed 6
@@ -297,6 +297,13 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         double target_direction = atan2(y1 - y, x1 - x);              // 范围为-pi到pi
         double delta_direction = target_direction - current_direction;// 正数表示逆时针旋转，负数表示顺时针旋转
 
+        // 多转一圈问题修复
+        if (delta_direction > pi) {
+            delta_direction -= 2 * pi;
+        } else if (delta_direction < -pi) {
+            delta_direction += 2 * pi;
+        }
+
         if (abs(delta_direction) < ignore_sub) {
             delta_direction = 0;
         }
@@ -323,9 +330,32 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         double line_speed = sqrt(robots[robot_id]->linear_velocity.first * robots[robot_id]->linear_velocity.first +
                                  robots[robot_id]->linear_velocity.second * robots[robot_id]->linear_velocity.second);
         robots[robot_id]->platform_distance[i] = distance;
-        double time_move = distance / max_forward_speed;// 最小移动时间（秒）
-        double frame_move = ceil(time_move * fps);      // 最小移动帧数（向上取整）
-        time_move = frame_move / fps;                   // 最小移动时间（秒）
+
+        // 计算转弯半径所需的速度
+        double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * 0.05);
+
+        // 计算线速度的加速度
+        double linear_acceleration = force / getRobotMass(robot_id);
+
+        // 当前速度加速到最大速度的时间
+        double time_acceleration = (max_forward_speed - line_speed) / linear_acceleration;
+
+        // 当前速度加速到最大速度所需的距离
+        double distance_acceleration = line_speed * time_acceleration + 0.5 * time_acceleration * (max_forward_speed - line_speed);
+
+        // 从最大速度减速到减速速度的时间
+        double time_deceleration = (max_forward_speed - decelerate_speed) / linear_acceleration;
+
+        // 最大速度减速到减速速度所需的距离
+        double distance_deceleration = decelerate_speed * time_deceleration + 0.5 * time_acceleration * (max_forward_speed - decelerate_speed);
+
+        // 匀速运动的距离
+        double distance_constant = distance - distance_acceleration - distance_deceleration;
+
+        // 总时间
+        double time_move = time_acceleration + time_acceleration + distance_constant / max_forward_speed;
+        double frame_move = ceil(time_move * fps);// 最小移动帧数（向上取整）
+        time_move = frame_move / fps;             // 最小移动时间（秒）
 
         // 更新机器人到工作台的前进速度和前进时间
         if (frame_move < ignore_sub) {
@@ -335,8 +365,11 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
             // else
             robots[robot_id]->platform_forward_velocity[i] = max(0 - line_speed, double(min_forward_speed));
             robots[robot_id]->platform_forward_frame[i] = 0;
+        } else if (distance <= distance_constant + max_forward_speed / 50) {
+            robots[robot_id]->platform_forward_velocity[i] = 0;
+            robots[robot_id]->platform_forward_frame[i] = frame_move;
         } else {
-            robots[robot_id]->platform_forward_velocity[i] = distance / time_move * forward_fix;
+            robots[robot_id]->platform_forward_velocity[i] = max_forward_speed * forward_fix;
             robots[robot_id]->platform_forward_frame[i] = frame_move;
         }
     }
