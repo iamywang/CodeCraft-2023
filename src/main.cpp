@@ -10,23 +10,22 @@
 #define force 250
 #define torque 50
 
-// 可调整参数（好像真的有用）
-// 1. 速度过大撞墙问题，修正参数（原始值为1, 1）
-#define wall_margin 0
-
-// 2. 最大最小前进旋转速度（原始值为6, -2, pi, -pi）
+// 最大最小前进旋转速度
 #define max_forward_speed 6
 #define min_forward_speed -2
 #define max_rotate_speed pi
 #define min_rotate_speed -pi
 
-// 3. 机器人是否在工作台判断距离（原始值为0.4）
-#define distance_within 0.35
 
-// 4. 贪心策略中，时间系数的估计值
+
+// 可调整参数（好像真的有用）
+// 1. 机器人是否在工作台判断距离（原始值为0.4）
+#define distance_within 0.4
+
+// 2. 贪心策略中，时间系数的估计值
 #define time_coefficient 0.9
 
-// 5. 帧数上限，解决购买后时间不足以出售的问题
+// 3. 帧数上限，解决购买后时间不足以出售的问题
 #define max_frames 8900
 
 // 大地图 100*100 (0.5m*0.5m)
@@ -313,16 +312,12 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         time_direction = frame_direction / fps;                         // 最小旋转时间（秒）
 
         // 更新机器人到工作台的方向的角速度和旋转时间
+        // 始终开足最大马力
         if (frame_direction < ignore_sub) {
-            // 判断是否撞墙
-            if (robots[robot_id]->position.first < wall_margin || robots[robot_id]->position.first > 50 - wall_margin ||
-                robots[robot_id]->position.second < wall_margin || robots[robot_id]->position.second > 50 - wall_margin)
-                robots[robot_id]->platform_angular_velocity[i] = robots[robot_id]->angular_velocity > 0 ? min_rotate_speed : max_rotate_speed;
-            else
-                robots[robot_id]->platform_angular_velocity[i] = robots[robot_id]->angular_velocity > 0 ? max(0 - robots[robot_id]->angular_velocity, min_rotate_speed) : min(0 - robots[robot_id]->angular_velocity, max_rotate_speed);
+            robots[robot_id]->platform_angular_velocity[i] = 0;
             robots[robot_id]->platform_rotate_frame[i] = 0;
         } else {
-            robots[robot_id]->platform_angular_velocity[i] = delta_direction / time_direction;
+            robots[robot_id]->platform_angular_velocity[i] = delta_direction >= 0 ? max_rotate_speed : min_rotate_speed;
             robots[robot_id]->platform_rotate_frame[i] = frame_direction;
         }
 
@@ -362,7 +357,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         if (frame_move < ignore_sub) {
             robots[robot_id]->platform_forward_velocity[i] = decelerate_speed;
             robots[robot_id]->platform_forward_frame[i] = 0;
-        } else if (distance <= distance_constant + max_forward_speed / 50) {
+        } else if (distance <= distance_constant + max_forward_speed * 0.02) {
             robots[robot_id]->platform_forward_velocity[i] = decelerate_speed;
             robots[robot_id]->platform_forward_frame[i] = frame_move;
         } else {
