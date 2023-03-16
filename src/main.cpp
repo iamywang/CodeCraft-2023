@@ -14,7 +14,7 @@
 // 1. 速度过大撞墙问题，修正参数（原始值为1, 1）
 #define angle_fix 1
 #define forward_fix 1
-#define wall_margin 4
+#define wall_margin 3.5
 
 // 2. 最大最小前进旋转速度（原始值为6, -2, pi, -pi）
 #define max_forward_speed 6
@@ -54,7 +54,7 @@ map<int, int> available_demand;
 
 // 当前帧每种物品的提供量（按照编号为1-7）
 map<int, vector<int>> item_supply;
-// map<int, vector<int>> item_pending;
+map<int, vector<int>> item_pending;
 
 double total_cost = 0;
 double total_sold = 0;
@@ -119,12 +119,12 @@ void readFrameUntilOK() {
     item_demand = map<int, vector<int>>();
     available_demand = map<int, int>();
     item_supply = map<int, vector<int>>();
-    // item_pending = map<int, vector<int>>();
+    item_pending = map<int, vector<int>>();
     for (int i = 1; i <= 7; i++) {
         item_demand.insert(make_pair(i, vector<int>()));
         available_demand.insert(make_pair(i, 0));
         item_supply.insert(make_pair(i, vector<int>()));
-        // item_pending.insert(make_pair(i, vector<int>()));
+        item_pending.insert(make_pair(i, vector<int>()));
     }
 
     // 第二行: 工作台数量
@@ -166,10 +166,9 @@ void readFrameUntilOK() {
         // 判断工作台当前能否提供产品
         if (platforms[map_index]->remain_time == 0 || platforms[map_index]->product_state != 0) {
             item_supply[platform_id].push_back(map_index);
+        } else {
+            item_pending[platform_id].push_back(map_index);
         }
-        // else {
-        // item_pending[platform_id].push_back(map_index);
-        // }
     }
 
     // 最后四行: 机器人状态, 工作台ID, 物品类型, 时间价值系数, 碰撞价值系数, 角速度, 线速度, 朝向, 坐标
@@ -310,9 +309,9 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
             // 判断是否撞墙
             if (robots[robot_id]->position.first < wall_margin || robots[robot_id]->position.first > 50 - wall_margin ||
                 robots[robot_id]->position.second < wall_margin || robots[robot_id]->position.second > 50 - wall_margin)
-                robots[robot_id]->platform_angular_velocity[i] = min_rotate_speed;
+                robots[robot_id]->platform_angular_velocity[i] = robots[robot_id]->angular_velocity > 0 ? min_rotate_speed : max_rotate_speed;
             else
-                robots[robot_id]->platform_angular_velocity[i] = max(0 - robots[robot_id]->angular_velocity, min_rotate_speed);
+                robots[robot_id]->platform_angular_velocity[i] = robots[robot_id]->angular_velocity > 0 ? max(0 - robots[robot_id]->angular_velocity, min_rotate_speed) : min(0 - robots[robot_id]->angular_velocity, max_rotate_speed);
             robots[robot_id]->platform_rotate_frame[i] = 0;
         } else {
             robots[robot_id]->platform_angular_velocity[i] = delta_direction / time_direction * angle_fix;
@@ -389,6 +388,7 @@ bool canBuyItem(int frame_id, int robot_id, int platform_id, int money) {
     return false;
 }
 
+int global_robot = -1;
 // 贪心算法
 // 1. 机器人每次找离自己最近的可购买的物品
 // 2. 并将该物品出售到离自己最近的（购买后）可接收的平台
@@ -452,16 +452,39 @@ void greedyAlg2(int frame_id, int money) {
                 }
             }
         }
-
-        // 判断是否撞墙（考虑朝向）
-        // if ((robots[robot_idx]->position.first < 0.65 && (robots[robot_idx]->orientation >= 0.5 * pi && robots[robot_idx]->orientation <= 1 * pi || robots[robot_idx]->orientation >= -1 * pi && robots[robot_idx]->orientation <= -0.5 * pi)) ||
-        //     (robots[robot_idx]->position.first > 49.35 && (robots[robot_idx]->orientation >= 0 * pi && robots[robot_idx]->orientation <= 0.5 * pi || robots[robot_idx]->orientation >= -0.5 * pi && robots[robot_idx]->orientation <= -0 * pi)) ||
-        //     (robots[robot_idx]->position.second < 0.65 && (robots[robot_idx]->orientation >= -1 * pi && robots[robot_idx]->orientation <= -0 * pi)) ||
-        //     (robots[robot_idx]->position.second > 49.35 && (robots[robot_idx]->orientation >= 0 * pi && robots[robot_idx]->orientation <= 1 * pi))) {
-        //     cout << "rotate " << robot_idx << " " << min_rotate_speed << endl;
-        //     cout << "forward " << robot_idx << " " << min_forward_speed << endl;
-        // }
     }
+
+    // // 两个机器人相撞判断
+    // for (int robot_x = 0; robot_x <= 2; robot_x++) {
+    //     for (int robot_y = robot_x + 1; robot_y <= 3; robot_y++) {
+    //         // 每个机器人的位置
+    //         double robot_x_x = robots[robot_x]->position.first;
+    //         double robot_x_y = robots[robot_x]->position.second;
+    //         double robot_y_x = robots[robot_y]->position.first;
+    //         double robot_y_y = robots[robot_y]->position.second;
+
+    //         // 每个机器人物品持有情况
+    //         int robot_x_item = robots[robot_x]->item_type;
+    //         int robot_y_item = robots[robot_y]->item_type;
+    //         int item_param = (robot_x_item > 0 ? 1 : 0) + (robot_y_item > 0 ? 1 : 0);
+
+    //         // 判定距离
+    //         double collision_distance = item_param * radius_with + (2 - item_param) * radius_without;
+
+    //         // 判定是否相撞
+    //         double distance = getDistance(robot_x_x, robot_x_y, robot_y_x, robot_y_y) + 0.4;
+
+    //         if (distance <= collision_distance + 0.006) {
+    //             // 相撞后的处理，每个机器人角速度反向
+    //             cout << "rotate " << robot_x << " " << -robots[robot_x]->angular_velocity << endl;
+    //             cout << "rotate " << robot_y << " " << -robots[robot_y]->angular_velocity << endl;
+
+    //             // 相撞后的处理，每个机器人线速度减小到最小
+    //             cout << "forward " << robot_x << " " << min_forward_speed << endl;
+    //             cout << "forward " << robot_y << " " << min_forward_speed << endl;
+    //         }
+    //     }
+    // }
 
     cout << "OK" << endl;
     cout << flush;
