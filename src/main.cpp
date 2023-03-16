@@ -23,7 +23,7 @@
 #define min_rotate_speed -pi
 
 // 3. 机器人是否在工作台判断距离（原始值为0.4）
-#define distance_within 0.38
+#define distance_within 0.35
 
 // 4. 贪心策略中，时间系数的估计值
 #define time_coefficient 0.9
