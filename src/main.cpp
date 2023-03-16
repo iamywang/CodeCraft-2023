@@ -454,37 +454,70 @@ void greedyAlg2(int frame_id, int money) {
         }
     }
 
-    // // 两个机器人相撞判断
-    // for (int robot_x = 0; robot_x <= 2; robot_x++) {
-    //     for (int robot_y = robot_x + 1; robot_y <= 3; robot_y++) {
-    //         // 每个机器人的位置
-    //         double robot_x_x = robots[robot_x]->position.first;
-    //         double robot_x_y = robots[robot_x]->position.second;
-    //         double robot_y_x = robots[robot_y]->position.first;
-    //         double robot_y_y = robots[robot_y]->position.second;
+    // 两个机器人相撞判断
+    for (int robot_x = 0; robot_x <= 2; robot_x++) {
+        for (int robot_y = robot_x + 1; robot_y <= 3; robot_y++) {
+            // 每个机器人的位置
+            double robot_x_x = robots[robot_x]->position.first;
+            double robot_x_y = robots[robot_x]->position.second;
+            double robot_y_x = robots[robot_y]->position.first;
+            double robot_y_y = robots[robot_y]->position.second;
 
-    //         // 每个机器人物品持有情况
-    //         int robot_x_item = robots[robot_x]->item_type;
-    //         int robot_y_item = robots[robot_y]->item_type;
-    //         int item_param = (robot_x_item > 0 ? 1 : 0) + (robot_y_item > 0 ? 1 : 0);
+            // 每个机器人物品持有情况
+            int robot_x_item = robots[robot_x]->item_type;
+            int robot_y_item = robots[robot_y]->item_type;
+            int item_param = (robot_x_item > 0 ? 1 : 0) + (robot_y_item > 0 ? 1 : 0);
 
-    //         // 判定距离
-    //         double collision_distance = item_param * radius_with + (2 - item_param) * radius_without;
+            // 每个机器人的方向
+            double robot_x_orientation = robots[robot_x]->orientation;
+            double robot_y_orientation = robots[robot_y]->orientation;
 
-    //         // 判定是否相撞
-    //         double distance = getDistance(robot_x_x, robot_x_y, robot_y_x, robot_y_y) + 0.4;
+            // 两个机器人方向是否相对
+            int collision_orientation = 0;
 
-    //         if (distance <= collision_distance + 0.006) {
-    //             // 相撞后的处理，每个机器人角速度反向
-    //             cout << "rotate " << robot_x << " " << -robots[robot_x]->angular_velocity << endl;
-    //             cout << "rotate " << robot_y << " " << -robots[robot_y]->angular_velocity << endl;
+            // 计算与两个机器人中心连线垂直的方向
+            double line_orientation = atan2(robot_y_y - robot_x_y, robot_y_x - robot_x_x);
+            if (line_orientation >= 0) {
+                double line_orientation_reverse = line_orientation - pi;
 
-    //             // 相撞后的处理，每个机器人线速度减小到最小
-    //             cout << "forward " << robot_x << " " << min_forward_speed << endl;
-    //             cout << "forward " << robot_y << " " << min_forward_speed << endl;
-    //         }
-    //     }
-    // }
+                // 机器人x出现问题的方向
+                if ((robot_x_orientation >= 0 && robot_x_orientation <= line_orientation) || (robot_x_orientation <= 0 && robot_x_orientation >= line_orientation_reverse)) {
+                    collision_orientation++;
+                }
+                // 机器人y出现问题的方向
+                if ((robot_y_orientation >= line_orientation && robot_y_orientation <= pi) || (robot_y_orientation <= line_orientation_reverse && robot_y_orientation >= -pi)) {
+                    collision_orientation++;
+                }
+            } else {
+                double line_orientation_reverse = line_orientation + pi;
+
+                // 机器人x出现问题的方向
+                if ((robot_x_orientation >= line_orientation_reverse && robot_x_orientation <= pi) || (robot_x_orientation <= line_orientation && robot_x_orientation >= -pi)) {
+                    collision_orientation++;
+                }
+                // 机器人y出现问题的方向
+                if ((robot_y_orientation >= 0 && robot_y_orientation <= line_orientation_reverse) || (robot_y_orientation <= 0 && robot_y_orientation >= line_orientation)) {
+                    collision_orientation++;
+                }
+            }
+
+            // 判定距离
+            double collision_distance = item_param * radius_with + (2 - item_param) * radius_without;
+
+            // 判定是否相撞
+            double distance = sqrt(pow(robot_x_x - robot_y_x, 2) + pow(robot_x_y - robot_y_y, 2));
+
+            if (distance <= collision_distance && collision_orientation == 2) {
+                // 相撞后的处理，每个机器人角速度反向
+                // cout << "rotate " << robot_x << " " << -robots[robot_x]->angular_velocity << endl;
+                // cout << "rotate " << robot_y << " " << -robots[robot_y]->angular_velocity << endl;
+
+                // 相撞后的处理，每个机器人线速度减小到最小
+                // cout << "forward " << robot_x << " " << min_forward_speed << endl;
+                // cout << "forward " << robot_y << " " << min_forward_speed << endl;
+            }
+        }
+    }
 
     cout << "OK" << endl;
     cout << flush;
