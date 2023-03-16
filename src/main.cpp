@@ -316,6 +316,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
             robots[robot_id]->platform_rotate_frame[i] = 0;
         } else {
             robots[robot_id]->platform_angular_velocity[i] = delta_direction >= 0 ? max_rotate_speed : min_rotate_speed;
+            // robots[robot_id]->platform_angular_velocity[i] = delta_direction / time_direction;
             robots[robot_id]->platform_rotate_frame[i] = frame_direction;
         }
 
@@ -325,8 +326,9 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
                                  robots[robot_id]->linear_velocity.second * robots[robot_id]->linear_velocity.second);
         robots[robot_id]->platform_distance[i] = distance;
 
-        // 计算转弯半径所需的速度
-        double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * min(robots[robot_id]->position.first * 0.5, robots[robot_id]->position.second * 0.5));
+        // 计算转弯半径所需的速度，除了机器人圆心离墙壁的距离，还需要考虑机器人半径
+        double current_robot_radius = robots[robot_id]->item_type == 0 ? radius_without : radius_with;
+        double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first + current_robot_radius) * 0.5, (robots[robot_id]->position.second + current_robot_radius) * 0.5));
 
         // 计算线速度的加速度
         double linear_acceleration = force / getRobotMass(robot_id);
