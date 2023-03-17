@@ -18,7 +18,7 @@
 
 // 可调整参数（好像真的有用）
 // 1. 机器人是否在工作台判断距离（原始值为0.4）
-#define distance_within 0.4
+#define distance_within 0.39
 
 // 2. 贪心策略中，时间系数的估计值
 double time_coefficient = 0.9;
