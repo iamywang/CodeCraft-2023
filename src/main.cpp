@@ -304,6 +304,15 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
             delta_direction = 0;
         }
 
+        // 计算角速度的加速度
+        double angular_acceleration = robots[robot_id]->item_type == 0 ? 2.0 * double(torque) / getRobotMass(robot_id) / radius_with / radius_with : 2.0 * double(torque) / getRobotMass(robot_id) / radius_without / radius_without;
+
+        // 从当前角速度减到0的时间
+        double time_deceleration_angular_current = abs(robots[robot_id]->platform_angular_velocity[i] / angular_acceleration);
+
+        // 当前速度减到减速速度所需的距离
+        double distance_deceleration_angular_current = 0.5 * abs(robots[robot_id]->platform_angular_velocity[i]) * time_deceleration_angular_current;
+
         // 计算当前角加速度
         double time_direction = abs(delta_direction / max_rotate_speed);// 最小旋转时间（秒）
         double frame_direction = ceil(time_direction * fps);            // 最小旋转帧数（向上取整）
@@ -314,6 +323,11 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         if (frame_direction < ignore_sub) {
             robots[robot_id]->platform_angular_velocity[i] = 0;
             robots[robot_id]->platform_rotate_frame[i] = 0;
+        } else if (abs(delta_direction) <= distance_deceleration_angular_current + abs(robots[robot_id]->platform_angular_velocity[i]) * 0.02) {
+            // robots[robot_id]->platform_angular_velocity[i] = 0;
+            // robots[robot_id]->platform_angular_velocity[i] = delta_direction / time_direction;
+            robots[robot_id]->platform_angular_velocity[i] = delta_direction >= 0 ? max_rotate_speed : min_rotate_speed;
+            robots[robot_id]->platform_rotate_frame[i] = frame_direction;
         } else {
             robots[robot_id]->platform_angular_velocity[i] = delta_direction >= 0 ? max_rotate_speed : min_rotate_speed;
             // robots[robot_id]->platform_angular_velocity[i] = delta_direction / time_direction;
@@ -331,7 +345,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
 
         // 计算线速度的加速度
-        double linear_acceleration = force / getRobotMass(robot_id);
+        double linear_acceleration = double(force) / getRobotMass(robot_id);
 
         // 从当前速度减到减速速度的时间
         double time_deceleration_current = (line_speed - decelerate_speed) / linear_acceleration;
@@ -408,7 +422,7 @@ bool canBuyItem(int frame_id, int robot_id, int platform_id, int money) {
 // 1. 机器人每次找离自己最近的可购买的物品
 // 2. 并将该物品出售到离自己最近的（购买后）可接收的平台
 // 3. 为了解决最后购买后无法出售的情况，当发现剩余时间无法出售时，不再购买
-void greedyAlg2(int frame_id, int money) {
+void greedyAlg(int frame_id, int money) {
     cout << frame_id << endl;
     cout << flush;
 
@@ -540,28 +554,7 @@ void greedyAlg2(int frame_id, int money) {
     cout << flush;
 }
 
-// 测试输出，0号机器人
-void test(int frame_id, int money) {
-    cout << frame_id << endl;
-
-    // if (frame_id < 10)
-    //     cout << "forward 0 1" << endl;
-
-    if (frame_id < 100) {
-        cerr << "frame_id: " << frame_id << endl;
-        cerr << "robots[0].position: " << robots[0]->position.first << " " << robots[0]->position.second << endl;
-        cerr << "robots[0].orientation: " << robots[0]->orientation << endl;
-        cerr << "robots[0].angular_speed: " << robots[0]->angular_velocity << endl;
-        cerr << "robots[0].line_speed.x: " << robots[0]->linear_velocity.first << endl;
-        cerr << "robots[0].line_speed.y: " << robots[0]->linear_velocity.second << endl;
-    }
-    // if (frame_id >= 10) {
-    cout << "rotate 0 " << pi << endl;
-    // }
-    cout << "OK" << endl;
-    cout << flush;
-}
-
+// 主函数，调用读入地图、读入每一帧场面信息、调度算法
 int main() {
     // 读入地图
     initItemPricesRecipes();
@@ -575,8 +568,7 @@ int main() {
         readFrameUntilOK();
 
         // 贪心算法
-        greedyAlg2(frame_id, money);
-        // test(frame_id, money);
+        greedyAlg(frame_id, money);
     }
 
     // cerr << "total_cost: " << total_cost << endl;
