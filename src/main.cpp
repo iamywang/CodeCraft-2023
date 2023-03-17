@@ -540,6 +540,28 @@ void greedyAlg2(int frame_id, int money) {
     cout << flush;
 }
 
+// 测试输出，0号机器人
+void test(int frame_id, int money) {
+    cout << frame_id << endl;
+
+    // if (frame_id < 10)
+    //     cout << "forward 0 1" << endl;
+
+    if (frame_id < 100) {
+        cerr << "frame_id: " << frame_id << endl;
+        cerr << "robots[0].position: " << robots[0]->position.first << " " << robots[0]->position.second << endl;
+        cerr << "robots[0].orientation: " << robots[0]->orientation << endl;
+        cerr << "robots[0].angular_speed: " << robots[0]->angular_velocity << endl;
+        cerr << "robots[0].line_speed.x: " << robots[0]->linear_velocity.first << endl;
+        cerr << "robots[0].line_speed.y: " << robots[0]->linear_velocity.second << endl;
+    }
+    // if (frame_id >= 10) {
+    cout << "rotate 0 " << pi << endl;
+    // }
+    cout << "OK" << endl;
+    cout << flush;
+}
+
 int main() {
     // 读入地图
     initItemPricesRecipes();
@@ -554,6 +576,7 @@ int main() {
 
         // 贪心算法
         greedyAlg2(frame_id, money);
+        // test(frame_id, money);
     }
 
     // cerr << "total_cost: " << total_cost << endl;
