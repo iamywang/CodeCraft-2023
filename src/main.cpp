@@ -18,7 +18,7 @@
 
 // 可调整参数（好像真的有用）
 // 1. 机器人是否在工作台判断距离（原始值为0.4）
-#define distance_within 0.39
+#define distance_within 0.38
 
 // 2. 贪心策略中，时间系数的估计值
 double time_coefficient = 0.9;
@@ -51,8 +51,11 @@ map<int, int> available_demand;
 map<int, vector<int>> item_supply;
 map<int, vector<int>> item_pending;
 
-double total_cost = 0;
-double total_sold = 0;
+// 当前帧已经被选择的工作台（购买阶段）
+set<int> selected_platforms_buy;
+
+// 当前帧已经被选择的工作台（出售阶段）
+set<pair<int, int>> selected_platforms_sell;
 
 // 读入地图
 void readMapUntilOK() {
@@ -115,6 +118,8 @@ void readFrameUntilOK() {
     available_demand = map<int, int>();
     item_supply = map<int, vector<int>>();
     item_pending = map<int, vector<int>>();
+    selected_platforms_buy = set<int>();
+    selected_platforms_sell = set<pair<int, int>>();
     for (int i = 1; i <= 7; i++) {
         item_demand.insert(make_pair(i, vector<int>()));
         available_demand.insert(make_pair(i, 0));
@@ -161,7 +166,7 @@ void readFrameUntilOK() {
         // 判断工作台当前能否提供产品
         if (platforms[map_index]->remain_time == 0 || platforms[map_index]->product_state != 0) {
             item_supply[platform_id].push_back(map_index);
-        } else {
+        } else if (platforms[map_index]->remain_time <= 50) {
             item_pending[platform_id].push_back(map_index);
         }
     }
@@ -444,17 +449,41 @@ void greedyAlg(int frame_id, int money) {
                         distance_id_1.push_back(make_pair(distance_param / loss_param, item_supply[item_idx][i]));
                     }
                 }
+
+                // 前50帧
+                if (frame_id < 50 && item_pending[item_idx].size() > 0 && available_demand[item_idx] > 0) {
+                    for (int i = 0; i < item_pending[item_idx].size(); i++) {
+                        double distance_param = robots[robot_idx]->platform_distance[item_pending[item_idx][i]];
+                        double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
+                        // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
+                        distance_id_1.push_back(make_pair(distance_param / loss_param, item_pending[item_idx][i]));
+                    }
+                }
             }
             robots[robot_idx]->platform_distance_sort_buy = sortDistance(distance_id_1);
 
             // 根据距离进行购买
             if (robots[robot_idx]->platform_distance_sort_buy.size() > 0) {
-                int fetch_index = robots[robot_idx]->platform_distance_sort_buy[0];
+                int fetch_index = -1;
+                for (int buy = 0; buy < robots[robot_idx]->platform_distance_sort_buy.size(); buy++) {
+                    fetch_index = robots[robot_idx]->platform_distance_sort_buy[buy];
+                    // 如果没有匹配到已经选择的平台，则选择
+                    if (selected_platforms_buy.find(fetch_index) == selected_platforms_buy.end()) {
+                        if (platforms[fetch_index]->remain_time == -1)
+                            selected_platforms_buy.insert(fetch_index);
+                        break;
+                    }
+                }
+
+                if (fetch_index == -1)
+                    fetch_index = robots[robot_idx]->platform_distance_sort_buy[0];
+
                 cout << "rotate " << robot_idx << " " << robots[robot_idx]->platform_angular_velocity[fetch_index] << endl;
                 cout << "forward " << robot_idx << " " << robots[robot_idx]->platform_forward_velocity[fetch_index] << endl;
                 if (canBuyItem(frame_id, robot_idx, fetch_index, money)) {
                     cout << "buy " << robot_idx << endl;
                     available_demand[platforms[fetch_index]->id]--;
+                    break;
                 }
             }
         } else {
@@ -465,16 +494,34 @@ void greedyAlg(int frame_id, int money) {
             }
             robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0);
 
+            // 根据距离进行出售
             if (robots[robot_idx]->platform_distance_sort_sell.size() > 0) {
-                int fetch_index = robots[robot_idx]->platform_distance_sort_sell[0];
+                int fetch_index = -1;
+
+                for (int sell = 0; sell < robots[robot_idx]->platform_distance_sort_sell.size(); sell++) {
+                    fetch_index = robots[robot_idx]->platform_distance_sort_sell[sell];
+                    int can_product = platforms[fetch_index]->product_state == 0 || platforms[fetch_index]->remain_time == -1;
+                    // 如果没有匹配到已经选择的平台，则选择
+                    if (selected_platforms_sell.find(make_pair(robot_item, fetch_index)) == selected_platforms_sell.end()) {
+                        if (platforms[fetch_index]->id != 8 || platforms[fetch_index]->id != 9)
+                            selected_platforms_sell.insert(make_pair(robot_item, fetch_index));
+                        break;
+                    }
+                    // 或者放入后可以立即开始生产
+                    else if (can_product && ((platforms[fetch_index]->material_state + 1 << robot_item) == item_recipes[robot_item])) {
+                        selected_platforms_sell.insert(make_pair(robot_item, fetch_index));
+                        break;
+                    }
+                }
+
+                if (fetch_index == -1)
+                    fetch_index = robots[robot_idx]->platform_distance_sort_sell[0];
+                if (platforms[fetch_index]->remain_time == -1)
+                    selected_platforms_buy.insert(fetch_index);
                 cout << "rotate " << robot_idx << " " << robots[robot_idx]->platform_angular_velocity[fetch_index] << endl;
                 cout << "forward " << robot_idx << " " << robots[robot_idx]->platform_forward_velocity[fetch_index] << endl;
                 if (canSellItem(robot_idx, fetch_index)) {
                     cout << "sell " << robot_idx << endl;
-                    total_cost += robots[robot_idx]->time_value * robots[robot_idx]->collision_value;
-                    total_sold++;
-                    time_coefficient = double(total_sold) / double(total_cost);
-
                     // 卖出后判断是否可买入
                     if (canBuyItem(frame_id, robot_idx, fetch_index, money)) {
                         cout << "buy " << robot_idx << endl;
@@ -570,9 +617,5 @@ int main() {
         // 贪心算法
         greedyAlg(frame_id, money);
     }
-
-    // cerr << "total_cost: " << total_cost << endl;
-    // cerr << "total_sold: " << total_sold << endl;
-    // cerr << "total_coff: " << total_cost / total_sold << endl;
     return 0;
 }
