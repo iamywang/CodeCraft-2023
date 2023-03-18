@@ -18,7 +18,7 @@
 
 // 可调整参数（好像真的有用）
 // 1. 机器人是否在工作台判断距离（原始值为0.4）
-#define distance_within 0.38
+#define distance_within 0.4
 
 // 2. 贪心策略中，时间系数的估计值
 double time_coefficient = 0.9;
@@ -367,7 +367,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
 
         double min_wall = min(min_wall_x, min_wall_y) * 0.5;
 
-        double decelerate_speed = min_wall < 5 ? min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min_wall) : max_forward_speed;
+        double decelerate_speed = min(min_wall_x, min_wall_y) < 1.2 + radius_with ? min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min_wall) : max_forward_speed;
         // double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
 
         // 计算线速度的加速度
