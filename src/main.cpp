@@ -305,7 +305,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         }
 
         // 判断当前角度是否合适
-        if (abs(delta_direction) < ignore_sub) {
+        if (fabs(delta_direction) < ignore_sub) {
             delta_direction = 0;
         }
 
@@ -313,25 +313,23 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         double angular_acceleration = robots[robot_id]->item_type == 0 ? 2.0 * double(torque) / getRobotMass(robot_id) / radius_with / radius_with : 2.0 * double(torque) / getRobotMass(robot_id) / radius_without / radius_without;
 
         // 从当前角速度减到0的时间
-        double time_deceleration_angular_current = abs(robots[robot_id]->platform_angular_velocity[i] / angular_acceleration);
+        double time_deceleration_angular_current = fabs(robots[robot_id]->platform_angular_velocity[i] / angular_acceleration);
 
         // 当前速度减到减速速度所需的距离
-        double distance_deceleration_angular_current = 0.5 * abs(robots[robot_id]->platform_angular_velocity[i]) * time_deceleration_angular_current;
+        double distance_deceleration_angular_current = 0.5 * fabs(robots[robot_id]->platform_angular_velocity[i]) * time_deceleration_angular_current;
 
         // 计算当前角加速度
-        double time_direction = abs(delta_direction / max_rotate_speed);// 最小旋转时间（秒）
-        double frame_direction = ceil(time_direction * fps);            // 最小旋转帧数（向上取整）
-        time_direction = frame_direction / fps;                         // 最小旋转时间（秒）
+        double time_direction = fabs(delta_direction / max_rotate_speed);// 最小旋转时间（秒）
+        double frame_direction = ceil(time_direction * fps);             // 最小旋转帧数（向上取整）
+        time_direction = frame_direction / fps;                          // 最小旋转时间（秒）
 
         // 更新机器人到工作台的方向的角速度和旋转时间
         // 始终开足最大马力
         if (frame_direction < ignore_sub) {
             robots[robot_id]->platform_angular_velocity[i] = 0;
             robots[robot_id]->platform_rotate_frame[i] = 0;
-        } else if (abs(delta_direction) <= distance_deceleration_angular_current + abs(robots[robot_id]->platform_angular_velocity[i]) * 0.02) {
-            // robots[robot_id]->platform_angular_velocity[i] = 0;
-            // robots[robot_id]->platform_angular_velocity[i] = delta_direction / time_direction;
-            robots[robot_id]->platform_angular_velocity[i] = delta_direction >= 0 ? max_rotate_speed : min_rotate_speed;
+        } else if (fabs(delta_direction) <= distance_deceleration_angular_current + fabs(robots[robot_id]->platform_angular_velocity[i]) * 0.02) {
+            robots[robot_id]->platform_angular_velocity[i] = 0;
             robots[robot_id]->platform_rotate_frame[i] = frame_direction;
         } else {
             robots[robot_id]->platform_angular_velocity[i] = delta_direction >= 0 ? max_rotate_speed : min_rotate_speed;
@@ -347,7 +345,30 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
 
         // 计算转弯半径所需的速度，除了机器人圆心离墙壁的距离，还需要考虑机器人半径
         double current_robot_radius = robots[robot_id]->item_type == 0 ? radius_without : radius_with;
-        double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
+        // 上下左右墙的判断
+        double left_wall = robots[robot_id]->position.first - current_robot_radius;
+        double right_wall = 50 - robots[robot_id]->position.first - current_robot_radius;
+        double up_wall = 50 - robots[robot_id]->position.second - current_robot_radius;
+        double down_wall = robots[robot_id]->position.second - current_robot_radius;
+        double min_wall_x, min_wall_y;
+
+        if (robots[robot_id]->linear_velocity.first > 0)
+            min_wall_x = right_wall;
+        else if (robots[robot_id]->linear_velocity.first < 0)
+            min_wall_x = left_wall;
+        else
+            min_wall_x = min(left_wall, right_wall);
+        if (robots[robot_id]->linear_velocity.second > 0)
+            min_wall_y = up_wall;
+        else if (robots[robot_id]->linear_velocity.second < 0)
+            min_wall_y = down_wall;
+        else
+            min_wall_y = min(up_wall, down_wall);
+
+        double min_wall = min(min_wall_x, min_wall_y) * 0.5;
+
+        double decelerate_speed = min_wall < 5 ? min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min_wall) : max_forward_speed;
+        // double decelerate_speed = min(line_speed, abs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
 
         // 计算线速度的加速度
         double linear_acceleration = double(force) / getRobotMass(robot_id);
@@ -550,49 +571,21 @@ void greedyAlg(int frame_id, int money) {
             double robot_x_orientation = robots[robot_x]->orientation;
             double robot_y_orientation = robots[robot_y]->orientation;
 
-            // 两个机器人方向是否相对
-            int collision_orientation = 0;
-
-            // 计算与两个机器人中心连线垂直的方向
-            double line_orientation = atan2(robot_y_y - robot_x_y, robot_y_x - robot_x_x);
-            if (line_orientation >= 0) {
-                double line_orientation_reverse = line_orientation - pi;
-
-                // 机器人x出现问题的方向
-                if ((robot_x_orientation >= 0 && robot_x_orientation <= line_orientation) || (robot_x_orientation <= 0 && robot_x_orientation >= line_orientation_reverse)) {
-                    collision_orientation++;
-                }
-                // 机器人y出现问题的方向
-                if ((robot_y_orientation >= line_orientation && robot_y_orientation <= pi) || (robot_y_orientation <= line_orientation_reverse && robot_y_orientation >= -pi)) {
-                    collision_orientation++;
-                }
-            } else {
-                double line_orientation_reverse = line_orientation + pi;
-
-                // 机器人x出现问题的方向
-                if ((robot_x_orientation >= line_orientation_reverse && robot_x_orientation <= pi) || (robot_x_orientation <= line_orientation && robot_x_orientation >= -pi)) {
-                    collision_orientation++;
-                }
-                // 机器人y出现问题的方向
-                if ((robot_y_orientation >= 0 && robot_y_orientation <= line_orientation_reverse) || (robot_y_orientation <= 0 && robot_y_orientation >= line_orientation)) {
-                    collision_orientation++;
-                }
-            }
-
-            // 判定距离
-            double collision_distance = item_param * radius_with + (2 - item_param) * radius_without;
-
-            // 判定是否相撞
+            // 两个机器人的距离
             double distance = sqrt(pow(robot_x_x - robot_y_x, 2) + pow(robot_x_y - robot_y_y, 2));
 
-            if (distance <= collision_distance && collision_orientation == 2) {
-                // 相撞后的处理，每个机器人角速度反向
-                // cout << "rotate " << robot_x << " " << -robots[robot_x]->angular_velocity << endl;
-                // cout << "rotate " << robot_y << " " << -robots[robot_y]->angular_velocity << endl;
+            // 碰撞判定距离
+            double collision_distance = item_param * radius_with + (2 - item_param) * radius_without;
 
-                // 相撞后的处理，每个机器人线速度减小到最小
-                // cout << "forward " << robot_x << " " << min_forward_speed << endl;
-                // cout << "forward " << robot_y << " " << min_forward_speed << endl;
+            // 两个掉头
+            if (distance <= collision_distance) {
+                if (robots[robot_x]->angular_velocity >= 0 && robots[robot_y]->angular_velocity <= 0) {
+                    cout << "rotate " << robot_x << " " << -pi << endl;
+                    cout << "rotate " << robot_y << " " << pi << endl;
+                } else if (robots[robot_x]->angular_velocity <= 0 && robots[robot_y]->angular_velocity >= 0) {
+                    cout << "rotate " << robot_x << " " << pi << endl;
+                    cout << "rotate " << robot_y << " " << -pi << endl;
+                }
             }
         }
     }
