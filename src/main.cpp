@@ -583,16 +583,54 @@ void greedyAlg(int frame_id, int money) {
             double distance = sqrt(pow(robot_x_x - robot_y_x, 2) + pow(robot_x_y - robot_y_y, 2));
 
             // 碰撞判定距离
-            double collision_distance = item_param * radius_with + (2 - item_param) * radius_without;
+            // double collision_distance = item_param * radius_with + (2 - item_param) * radius_without;
+            double pred_frames = 7 * 0.02;
+            double collision_distance = sqrt(robots[robot_x]->linear_velocity.first * robots[robot_x]->linear_velocity.first + robots[robot_x]->linear_velocity.second * robots[robot_x]->linear_velocity.second) * pred_frames +
+                                        sqrt(robots[robot_y]->linear_velocity.first * robots[robot_y]->linear_velocity.first + robots[robot_y]->linear_velocity.second * robots[robot_y]->linear_velocity.second) * pred_frames;
 
             // 两个掉头
             if (distance <= collision_distance) {
-                if (robots[robot_x]->angular_velocity >= 0 && robots[robot_y]->angular_velocity <= 0) {
-                    // cout << "rotate " << robot_x << " " << -pi << endl;
-                    // cout << "rotate " << robot_y << " " << pi << endl;
-                } else if (robots[robot_x]->angular_velocity <= 0 && robots[robot_y]->angular_velocity >= 0) {
-                    // cout << "rotate " << robot_x << " " << pi << endl;
-                    // cout << "rotate " << robot_y << " " << -pi << endl;
+                // if (robots[robot_x]->angular_velocity >= 0 && robots[robot_y]->angular_velocity <= 0) {
+                //     cout << "rotate " << robot_x << " " << -pi << endl;
+                //     cout << "rotate " << robot_y << " " << pi << endl;
+                // } else if (robots[robot_x]->angular_velocity <= 0 && robots[robot_y]->angular_velocity >= 0) {
+                //     cout << "rotate " << robot_x << " " << pi << endl;
+                //     cout << "rotate " << robot_y << " " << -pi << endl;
+                // }
+                if (robots[robot_x]->item_type == 0 and robots[robot_y]->item_type == 0) {// 都没拿东西
+                    if (robots[robot_y]->angular_velocity >= 0) {
+                        cout << "rotate " << robot_y << " " << -pi << endl;
+                    } else {
+                        cout << "rotate " << robot_y << " " << pi << endl;
+                    }
+                } else if (robots[robot_x]->item_type == 0 or robots[robot_y]->item_type == 0) {// 有一个没拿东西
+                    if (robots[robot_x]->item_type == 0) {
+                        if (robots[robot_x]->angular_velocity >= 0) {
+                            cout << "rotate " << robot_x << " " << -pi << endl;
+                        } else {
+                            cout << "rotate " << robot_x << " " << pi << endl;
+                        }
+                    } else {
+                        if (robots[robot_y]->angular_velocity >= 0) {
+                            cout << "rotate " << robot_y << " " << -pi << endl;
+                        } else {
+                            cout << "rotate " << robot_y << " " << pi << endl;
+                        }
+                    }
+                } else if (robots[robot_x]->item_type != 0 and robots[robot_y]->item_type != 0) {// 两个都拿了东西
+                    if (robots[robot_x]->item_type >= robots[robot_y]->item_type) {
+                        if (robots[robot_y]->angular_velocity >= 0) {
+                            cout << "rotate " << robot_y << " " << -pi << endl;
+                        } else {
+                            cout << "rotate " << robot_y << " " << pi << endl;
+                        }
+                    } else {
+                        if (robots[robot_x]->angular_velocity >= 0) {
+                            cout << "rotate " << robot_x << " " << -pi << endl;
+                        } else {
+                            cout << "rotate " << robot_x << " " << pi << endl;
+                        }
+                    }
                 }
             }
         }
