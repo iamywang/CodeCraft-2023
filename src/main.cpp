@@ -494,12 +494,19 @@ void greedyAlg(int frame_id, int money) {
             // 根据距离进行出售
             if (robots[robot_idx]->platform_distance_sort_sell.size() > 0) {
                 int fetch_index = -1;
+                int nine_index = -1;
 
                 for (int sell = 0; sell < robots[robot_idx]->platform_distance_sort_sell.size(); sell++) {
                     fetch_index = robots[robot_idx]->platform_distance_sort_sell[sell];
                     int can_product = platforms[fetch_index]->product_state == 0 || platforms[fetch_index]->remain_time == -1;
                     // 如果没有匹配到已经选择的平台，则选择
                     if (selected_platforms_sell.find(make_pair(robot_item, fetch_index)) == selected_platforms_sell.end()) {
+                        if (platforms[fetch_index]->id == 9 && nine_index == -1) {
+                            // 率先匹配到的是9
+                            nine_index = fetch_index;
+                            fetch_index = -1;
+                            continue;
+                        }
                         if (platforms[fetch_index]->id != 8 || platforms[fetch_index]->id != 9)
                             selected_platforms_sell.insert(make_pair(robot_item, fetch_index));
                         break;
@@ -511,7 +518,9 @@ void greedyAlg(int frame_id, int money) {
                     }
                 }
 
-                if (fetch_index == -1)
+                if (fetch_index == -1 && nine_index != -1)
+                    fetch_index = nine_index;
+                else if (fetch_index == -1)
                     fetch_index = robots[robot_idx]->platform_distance_sort_sell[0];
                 if (platforms[fetch_index]->remain_time == -1)
                     selected_platforms_buy.insert(fetch_index);
