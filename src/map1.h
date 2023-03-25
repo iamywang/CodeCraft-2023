@@ -164,7 +164,10 @@ void greedyAlg1(int frame_id, int money) {
                         double distance_param = robots[robot_idx]->platform_distance[item_pending[item_idx][i]];
                         double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
                         // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
-                        distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
+                        if (platforms[item_pending[item_idx][i]]->id == robot_idx)
+                            distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
+                        if (robot_idx == 0 && platforms[item_pending[item_idx][i]]->id == 2)
+                            distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
                     }
                 }
             }

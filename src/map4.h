@@ -197,10 +197,16 @@ void greedyAlg4(int frame_id, int money) {
         } else {
             // 需要卖出物品
             vector<pair<double, int>> distance_id_0;
+            vector<pair<double, int>> distance_id_0_4;
             for (int i = 0; i < item_demand[robot_item].size(); i++) {
                 distance_id_0.push_back(make_pair(robots[robot_idx]->platform_distance[item_demand[robot_item][i]], item_demand[robot_item][i]));
+                if (platforms[item_demand[robot_item][i]]->id == 4)
+                    distance_id_0_4.push_back(make_pair(robots[robot_idx]->platform_distance[item_demand[robot_item][i]], item_demand[robot_item][i]));
             }
-            robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0);
+            if (distance_id_0_4.size() > 0)
+                robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0_4);
+            else
+                robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0);
 
             // 根据距离进行出售
             if (robots[robot_idx]->platform_distance_sort_sell.size() > 0) {
@@ -233,7 +239,7 @@ void greedyAlg4(int frame_id, int money) {
                     fetch_index = nine_index;
                 else if (fetch_index == -1)
                     fetch_index = robots[robot_idx]->platform_distance_sort_sell[0];
-                if (platforms[fetch_index]->remain_time == -1)
+                // if (platforms[fetch_index]->remain_time == -1)
                     selected_platforms_buy.insert(fetch_index);
                 cout << "rotate " << robot_idx << " " << robots[robot_idx]->platform_angular_velocity[fetch_index] << endl;
                 cout << "forward " << robot_idx << " " << robots[robot_idx]->platform_forward_velocity[fetch_index] << endl;

@@ -43,7 +43,7 @@ int main() {
             distance_within = 0.38;
             item_recipes.find(9)->second = 254;
             max_frames = 8980;
-            time_coefficient = 0.95;
+            time_coefficient = 0.9;
             greedyAlg4(frame_id, money);
         }
     }
