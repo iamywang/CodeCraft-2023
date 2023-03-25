@@ -87,7 +87,8 @@ void setRobotPlatformDistanceDirectionTime1(int robot_id) {
 
         double decelerate_speed = min(min_wall_x, min_wall_y) < 1.2 ? min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min_wall) : max_forward_speed;
         // double decelerate_speed = min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
-
+        if (decelerate_speed < 0.1)
+            decelerate_speed = 0.1;
         // 计算线速度的加速度
         double linear_acceleration = double(force) / getRobotMass(robot_id);
 
