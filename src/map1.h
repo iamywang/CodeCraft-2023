@@ -303,29 +303,28 @@ void greedyAlg1(int frame_id, int money) {
             //                             sqrt(robots[robot_y]->linear_velocity.first * robots[robot_y]->linear_velocity.first + robots[robot_y]->linear_velocity.second * robots[robot_y]->linear_velocity.second) * pred_frames;
 
             // 两个掉头
-            // if (distance <= 4 && fabs(acos((cos(robot_x_orientation) * (robot_y_x - robot_x_x) + sin(robot_x_orientation) * (robot_y_y - robot_x_y)) / distance)) <= pi/2.5) {
             double segma = fabs(acos((cos(robot_x_orientation) * (robot_y_x - robot_x_x) + sin(robot_x_orientation) * (robot_y_y - robot_x_y)) / distance));
-            if (segma <= pi / 2 && (robot_y_y - robot_x_y) * robot_y_orientation < 0 && distance * cos(segma) < 5 && distance * sin(segma) < 0.9) {
-                if (robots[robot_x]->item_type == 0 and robots[robot_y]->item_type == 0) {// 都没拿东西
-                    cout << "rotate " << robot_x << " " << pi / (robot_x + 1) << endl;
-                    cout << "forward " << robot_x << " " << 2 << endl;
-                } else if (robots[robot_x]->item_type == 0 or robots[robot_y]->item_type == 0) {// 有一个没拿东西
-                    if (robots[robot_x]->item_type == 0) {
-                        cout << "rotate " << robot_x << " " << pi / 2 << endl;
-                        cout << "forward " << robot_x << " " << 3 << endl;
-                    } else {
-                        cout << "rotate " << robot_x << " " << pi / 2 << endl;
-                        cout << "rotate " << robot_y << " " << pi / 2 << endl;
+            if (segma<=pi/2 && distance * cos(segma) < 8 && distance * sin(segma) < 0.9) { // robot_x在自己正前方的感知区域发现了robot_y
+                if((robot_y_y - robot_x_y)*robot_y_orientation<0){ // y面朝x而来
+                    if(robot_x_x >= robot_y_x){// y从x的左侧来
+                        if(robot_y_orientation > 0){
+                            cout << "rotate " << robot_x << " " << pi << endl;
+                            cout << "rotate " << robot_y << " " << pi << endl;
+                        }else{
+                            cout << "rotate " << robot_x << " " << -pi << endl;
+                            cout << "rotate " << robot_y << " " << -pi << endl;
+                        }
+                    }else{// y从x的右侧来
+                        if(robot_y_orientation > 0){
+                            cout << "rotate " << robot_x << " " << -pi << endl;
+                            cout << "rotate " << robot_y << " " << -pi << endl;
+                        }else{
+                            cout << "rotate " << robot_x << " " << pi << endl;
+                            cout << "rotate " << robot_y << " " << pi << endl;
+                        }
                     }
-                } else if (robots[robot_x]->item_type != 0 and robots[robot_y]->item_type != 0) {// 两个都拿了东西
-                    // if (robots[robot_x]->item_type < robots[robot_y]->item_type) {
-                    //     cout << "rotate " << robot_x << " " << pi / 2 << endl;
-                    //     cout << "rotate " << robot_y << " " << pi / 2 << endl;
-                    // } else {
-                    //     cout << "rotate " << robot_x << " " << pi / 2 << endl;
-                    //     cout << "rotate " << robot_y << " " << pi / 2 << endl;
-                    // }
-                    cout << "rotate " << robot_x << " " << pi / 2 << endl;
+                }else{ // y拿着东西在x前面跑
+                    cout << "forward " << robot_x << " " << 3 << endl;
                 }
                 break;
             }
