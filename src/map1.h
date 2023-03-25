@@ -141,7 +141,11 @@ void greedyAlg1(int frame_id, int money) {
     for (int robot_idx = 0; robot_idx <= 3; robot_idx++) {
         setRobotPlatformDistanceDirectionTime1(robot_idx);
 
-        // if(robot_idx != 0){continue;}
+        // 为了归一化available_demand
+        double available_demand_sum = 0;
+        for(int each_item_type = 1; each_item_type <= 7; each_item_type++){
+            available_demand_sum += available_demand[each_item_type];
+        }
 
         int robot_item = robots[robot_idx]->item_type;
         if (robot_item == 0) {
@@ -155,7 +159,8 @@ void greedyAlg1(int frame_id, int money) {
                         double distance_param = robots[robot_idx]->platform_distance[item_supply[item_idx][i]];
                         double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
                         // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
-                        distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_supply[item_idx][i]));
+                        // distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_supply[item_idx][i]));
+                        distance_id_1.push_back(make_pair((distance_param/50.0)*(41520.0/loss_param)*(available_demand_sum/(available_demand[item_idx]+1)), item_supply[item_idx][i]));
                     }
                 }
 
@@ -166,9 +171,11 @@ void greedyAlg1(int frame_id, int money) {
                         double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
                         // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
                         if (platforms[item_pending[item_idx][i]]->id == robot_idx)
-                            distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
+                            // distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
+                            distance_id_1.push_back(make_pair((distance_param/50.0)*(41520.0/loss_param)*(available_demand_sum/(available_demand[item_idx]+1)), item_pending[item_idx][i]));
                         if (robot_idx == 0 && platforms[item_pending[item_idx][i]]->id == 2)
-                            distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
+                            // distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
+                            distance_id_1.push_back(make_pair((distance_param/50.0)*(41520.0/loss_param)*(available_demand_sum/(available_demand[item_idx]+1)), item_pending[item_idx][i]));
                     }
                 }
             }
