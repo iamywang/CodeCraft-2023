@@ -22,7 +22,7 @@ int main() {
         // 3号图 1个9
         // 4号图 0个9 1个8
         if (nine_numbers == 4 && eight_numbers == 1) {
-            distance_within = 0.4;
+            distance_within = 0.38;
             item_recipes.find(9)->second = 128;
             max_frames = 8980;
             time_coefficient = 0.9;
