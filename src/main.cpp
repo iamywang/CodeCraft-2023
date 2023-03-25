@@ -25,21 +25,25 @@ int main() {
             distance_within = 0.4;
             item_recipes.find(9)->second = 128;
             max_frames = 8900;
+            time_coefficient = 0.9;
             greedyAlg1(frame_id, money);
         } else if (nine_numbers == 0 and eight_numbers == 2) {
             distance_within = 0.38;
             item_recipes.find(9)->second = 254;
             max_frames = 8980;
+            time_coefficient = 0.9;
             greedyAlg2(frame_id, money);
         } else if (nine_numbers == 1) {
             distance_within = 0.38;
             item_recipes.find(9)->second = 254;
             max_frames = 8980;
+            time_coefficient = 0.9;
             greedyAlg3(frame_id, money);
         } else if (nine_numbers == 0 and eight_numbers == 1) {
             distance_within = 0.38;
             item_recipes.find(9)->second = 254;
             max_frames = 8980;
+            time_coefficient = 0.95;
             greedyAlg4(frame_id, money);
         }
     }
