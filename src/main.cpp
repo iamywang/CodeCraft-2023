@@ -21,25 +21,25 @@ int main() {
         // 2号图 0个9 2个8
         // 3号图 1个9
         // 4号图 0个9 1个8
-        if (nine_numbers == 4) {
+        if (nine_numbers == 4 && eight_numbers == 1) {
             distance_within = 0.4;
             item_recipes.find(9)->second = 128;
             max_frames = 8980;
             time_coefficient = 0.9;
             greedyAlg1(frame_id, money);
-        } else if (nine_numbers == 0 and eight_numbers == 2) {
+        } else if (nine_numbers == 0 && eight_numbers == 2) {
             distance_within = 0.38;
             item_recipes.find(9)->second = 254;
             max_frames = 8980;
             time_coefficient = 0.9;
             greedyAlg2(frame_id, money);
-        } else if (nine_numbers == 1) {
+        } else if (nine_numbers == 1 && eight_numbers == 0) {
             distance_within = 0.38;
             item_recipes.find(9)->second = 254;
             max_frames = 8980;
             time_coefficient = 0.9;
             greedyAlg3(frame_id, money);
-        } else if (nine_numbers == 0 and eight_numbers == 1) {
+        } else if (nine_numbers == 0 && eight_numbers == 1) {
             distance_within = 0.38;
             item_recipes.find(9)->second = 254;
             max_frames = 8980;
