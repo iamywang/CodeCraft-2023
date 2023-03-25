@@ -18,7 +18,7 @@
 
 // 可调整参数（好像真的有用）
 // 1. 机器人是否在工作台判断距离（原始值为0.4）
-#define distance_within 0.4
+#define distance_within 0.38
 
 // 2. 贪心策略中，时间系数的估计值
 double time_coefficient = 0.9;
@@ -329,7 +329,7 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
             robots[robot_id]->platform_angular_velocity[i] = 0;
             robots[robot_id]->platform_rotate_frame[i] = 0;
         } else if (fabs(delta_direction) <= distance_deceleration_angular_current + fabs(robots[robot_id]->platform_angular_velocity[i]) * 0.02) {
-            robots[robot_id]->platform_angular_velocity[i] = delta_direction >= 0 ? max_rotate_speed : min_rotate_speed;
+            robots[robot_id]->platform_angular_velocity[i] = 0;
             robots[robot_id]->platform_rotate_frame[i] = frame_direction;
         } else {
             robots[robot_id]->platform_angular_velocity[i] = delta_direction >= 0 ? max_rotate_speed : min_rotate_speed;
@@ -344,30 +344,30 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
 
         // 计算转弯半径所需的速度，除了机器人圆心离墙壁的距离，还需要考虑机器人半径
         double current_robot_radius = robots[robot_id]->item_type == 0 ? radius_without : radius_with;
-        // // 上下左右墙的判断
-        // double left_wall = robots[robot_id]->position.first - current_robot_radius;
-        // double right_wall = 50 - robots[robot_id]->position.first - current_robot_radius;
-        // double up_wall = 50 - robots[robot_id]->position.second - current_robot_radius;
-        // double down_wall = robots[robot_id]->position.second - current_robot_radius;
-        // double min_wall_x, min_wall_y;
+        // 上下左右墙的判断
+        double left_wall = robots[robot_id]->position.first - current_robot_radius;
+        double right_wall = 50 - robots[robot_id]->position.first - current_robot_radius;
+        double up_wall = 50 - robots[robot_id]->position.second - current_robot_radius;
+        double down_wall = robots[robot_id]->position.second - current_robot_radius;
+        double min_wall_x, min_wall_y;
 
-        // if (robots[robot_id]->linear_velocity.first > 0)
-        //     min_wall_x = right_wall;
-        // else if (robots[robot_id]->linear_velocity.first < 0)
-        //     min_wall_x = left_wall;
-        // else
-        //     min_wall_x = min(left_wall, right_wall);
-        // if (robots[robot_id]->linear_velocity.second > 0)
-        //     min_wall_y = up_wall;
-        // else if (robots[robot_id]->linear_velocity.second < 0)
-        //     min_wall_y = down_wall;
-        // else
-        //     min_wall_y = min(up_wall, down_wall);
+        if (robots[robot_id]->linear_velocity.first > 0)
+            min_wall_x = right_wall;
+        else if (robots[robot_id]->linear_velocity.first < 0)
+            min_wall_x = left_wall;
+        else
+            min_wall_x = min(left_wall, right_wall);
+        if (robots[robot_id]->linear_velocity.second > 0)
+            min_wall_y = up_wall;
+        else if (robots[robot_id]->linear_velocity.second < 0)
+            min_wall_y = down_wall;
+        else
+            min_wall_y = min(up_wall, down_wall);
 
-        // double min_wall = min(min_wall_x, min_wall_y) * 0.5;
+        double min_wall = min(min_wall_x, min_wall_y) * 0.5;
 
-        // double decelerate_speed = min(min_wall_x, min_wall_y) < 1.2 + radius_with ? min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min_wall) : max_forward_speed;
-        double decelerate_speed = min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
+        double decelerate_speed = min(min_wall_x, min_wall_y) < 1.2 ? min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min_wall) : max_forward_speed;
+        // double decelerate_speed = min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
 
         // 计算线速度的加速度
         double linear_acceleration = double(force) / getRobotMass(robot_id);
@@ -393,6 +393,18 @@ void setRobotPlatformDistanceDirectionTime(int robot_id) {
         } else {
             robots[robot_id]->platform_forward_velocity[i] = max_forward_speed;
             robots[robot_id]->platform_forward_frame[i] = frame_move;
+        }
+
+        double distance_wall = 0.75 + distance_within;
+        if (robots[robot_id]->item_type != 0) {
+            if (left_wall < distance_wall && ((robots[robot_id]->orientation > 0.5 * pi && robots[robot_id]->orientation < pi) || (robots[robot_id]->orientation > -pi && robots[robot_id]->orientation < -0.5 * pi)))
+                robots[robot_id]->platform_forward_velocity[i] = 0.8;
+            if (right_wall < distance_wall && ((robots[robot_id]->orientation > 0 && robots[robot_id]->orientation < 0.5 * pi) || (robots[robot_id]->orientation > -0.5 * pi && robots[robot_id]->orientation < 0)))
+                robots[robot_id]->platform_forward_velocity[i] = 0.8;
+            if (up_wall < distance_wall && robots[robot_id]->orientation > 0 && robots[robot_id]->orientation < pi)
+                robots[robot_id]->platform_forward_velocity[i] = 0.8;
+            if (down_wall < distance_wall && robots[robot_id]->orientation > -pi && robots[robot_id]->orientation < 0)
+                robots[robot_id]->platform_forward_velocity[i] = 0.8;
         }
     }
 }
@@ -454,6 +466,9 @@ void greedyAlg(int frame_id, int money) {
     // 每个机器人分别进行调度
     for (int robot_idx = 0; robot_idx <= 3; robot_idx++) {
         setRobotPlatformDistanceDirectionTime(robot_idx);
+
+        // if(robot_idx != 0){continue;}
+
         int robot_item = robots[robot_idx]->item_type;
         if (robot_item == 0) {
             // 为0表示需要购买物品
@@ -466,7 +481,7 @@ void greedyAlg(int frame_id, int money) {
                         double distance_param = robots[robot_idx]->platform_distance[item_supply[item_idx][i]];
                         double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
                         // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
-                        distance_id_1.push_back(make_pair(distance_param / loss_param, item_supply[item_idx][i]));
+                        distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_supply[item_idx][i]));
                     }
                 }
 
@@ -476,7 +491,7 @@ void greedyAlg(int frame_id, int money) {
                         double distance_param = robots[robot_idx]->platform_distance[item_pending[item_idx][i]];
                         double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
                         // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
-                        distance_id_1.push_back(make_pair(distance_param / loss_param, item_pending[item_idx][i]));
+                        distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
                     }
                 }
             }
@@ -562,8 +577,11 @@ void greedyAlg(int frame_id, int money) {
     }
 
     // 两个机器人相撞判断
-    for (int robot_x = 0; robot_x <= 2; robot_x++) {
-        for (int robot_y = robot_x + 1; robot_y <= 3; robot_y++) {
+    for (int robot_x = 0; robot_x <= 3; robot_x++) {
+        for (int robot_y = 0; robot_y <= 3; robot_y++) {
+            if(robot_y == robot_x){
+                continue;
+            }
             // 每个机器人的位置
             double robot_x_x = robots[robot_x]->position.first;
             double robot_x_y = robots[robot_x]->position.second;
@@ -584,54 +602,36 @@ void greedyAlg(int frame_id, int money) {
 
             // 碰撞判定距离
             // double collision_distance = item_param * radius_with + (2 - item_param) * radius_without;
-            double pred_frames = 7 * 0.02;
-            double collision_distance = sqrt(robots[robot_x]->linear_velocity.first * robots[robot_x]->linear_velocity.first + robots[robot_x]->linear_velocity.second * robots[robot_x]->linear_velocity.second) * pred_frames +
-                                        sqrt(robots[robot_y]->linear_velocity.first * robots[robot_y]->linear_velocity.first + robots[robot_y]->linear_velocity.second * robots[robot_y]->linear_velocity.second) * pred_frames;
+            // double pred_frames = 6 * 0.02;
+            // double collision_distance = sqrt(robots[robot_x]->linear_velocity.first * robots[robot_x]->linear_velocity.first + robots[robot_x]->linear_velocity.second * robots[robot_x]->linear_velocity.second) * pred_frames +
+            //                             sqrt(robots[robot_y]->linear_velocity.first * robots[robot_y]->linear_velocity.first + robots[robot_y]->linear_velocity.second * robots[robot_y]->linear_velocity.second) * pred_frames;
 
             // 两个掉头
-            if (distance <= collision_distance) {
-                // if (robots[robot_x]->angular_velocity >= 0 && robots[robot_y]->angular_velocity <= 0) {
-                //     cout << "rotate " << robot_x << " " << -pi << endl;
-                //     cout << "rotate " << robot_y << " " << pi << endl;
-                // } else if (robots[robot_x]->angular_velocity <= 0 && robots[robot_y]->angular_velocity >= 0) {
-                //     cout << "rotate " << robot_x << " " << pi << endl;
-                //     cout << "rotate " << robot_y << " " << -pi << endl;
-                // }
+            // if (distance <= 4 && fabs(acos((cos(robot_x_orientation) * (robot_y_x - robot_x_x) + sin(robot_x_orientation) * (robot_y_y - robot_x_y)) / distance)) <= pi/2.5) {
+            double segma = fabs(acos((cos(robot_x_orientation) * (robot_y_x - robot_x_x) + sin(robot_x_orientation) * (robot_y_y - robot_x_y)) / distance));
+            if (segma<=pi/2 && (robot_y_y - robot_x_y)*robot_y_orientation<0 && distance * cos(segma) < 5 && distance * sin(segma) < 0.9) {
                 if (robots[robot_x]->item_type == 0 and robots[robot_y]->item_type == 0) {// 都没拿东西
-                    if (robots[robot_y]->angular_velocity >= 0) {
-                        cout << "rotate " << robot_y << " " << -pi << endl;
-                    } else {
-                        cout << "rotate " << robot_y << " " << pi << endl;
-                    }
+                    cout << "rotate " << robot_x << " " << pi / (robot_x + 1) << endl;
+                    cout << "forward " << robot_x << " " << 2 << endl;
                 } else if (robots[robot_x]->item_type == 0 or robots[robot_y]->item_type == 0) {// 有一个没拿东西
                     if (robots[robot_x]->item_type == 0) {
-                        if (robots[robot_x]->angular_velocity >= 0) {
-                            cout << "rotate " << robot_x << " " << -pi << endl;
-                        } else {
-                            cout << "rotate " << robot_x << " " << pi << endl;
-                        }
+                        cout << "rotate " << robot_x << " " << pi / 2 << endl;
+                        cout << "forward " << robot_x << " " << 3 << endl;
                     } else {
-                        if (robots[robot_y]->angular_velocity >= 0) {
-                            cout << "rotate " << robot_y << " " << -pi << endl;
-                        } else {
-                            cout << "rotate " << robot_y << " " << pi << endl;
-                        }
+                        cout << "rotate " << robot_x << " " << pi / 2 << endl;
+                        cout << "rotate " << robot_y << " " << pi / 2 << endl;
                     }
                 } else if (robots[robot_x]->item_type != 0 and robots[robot_y]->item_type != 0) {// 两个都拿了东西
-                    if (robots[robot_x]->item_type >= robots[robot_y]->item_type) {
-                        if (robots[robot_y]->angular_velocity >= 0) {
-                            cout << "rotate " << robot_y << " " << -pi << endl;
-                        } else {
-                            cout << "rotate " << robot_y << " " << pi << endl;
-                        }
-                    } else {
-                        if (robots[robot_x]->angular_velocity >= 0) {
-                            cout << "rotate " << robot_x << " " << -pi << endl;
-                        } else {
-                            cout << "rotate " << robot_x << " " << pi << endl;
-                        }
-                    }
+                    // if (robots[robot_x]->item_type < robots[robot_y]->item_type) {
+                    //     cout << "rotate " << robot_x << " " << pi / 2 << endl;
+                    //     cout << "rotate " << robot_y << " " << pi / 2 << endl;
+                    // } else {
+                    //     cout << "rotate " << robot_x << " " << pi / 2 << endl;
+                    //     cout << "rotate " << robot_y << " " << pi / 2 << endl;
+                    // }
+                    cout << "rotate " << robot_x << " " << pi / 2 << endl;
                 }
+                break;
             }
         }
     }
