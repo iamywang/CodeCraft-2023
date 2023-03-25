@@ -203,8 +203,11 @@ void greedyAlg4(int frame_id, int money) {
                 if (platforms[item_demand[robot_item][i]]->id == 4)
                     distance_id_0_4.push_back(make_pair(robots[robot_idx]->platform_distance[item_demand[robot_item][i]], item_demand[robot_item][i]));
             }
-            if (distance_id_0_4.size() > 0)
+            if (distance_id_0_4.size() > 0) {
                 robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0_4);
+                vector<int> tmp_distance = sortDistance(distance_id_0);
+                robots[robot_idx]->platform_distance_sort_sell.insert(robots[robot_idx]->platform_distance_sort_sell.end(), tmp_distance.begin(), tmp_distance.end());
+            }
             else
                 robots[robot_idx]->platform_distance_sort_sell = sortDistance(distance_id_0);
 
@@ -287,26 +290,26 @@ void greedyAlg4(int frame_id, int money) {
 
             // 两个掉头
             double segma = fabs(acos((cos(robot_x_orientation) * (robot_y_x - robot_x_x) + sin(robot_x_orientation) * (robot_y_y - robot_x_y)) / distance));
-            if (segma<=pi/2 && distance * cos(segma) < 8 && distance * sin(segma) < 0.9) { // robot_x在自己正前方的感知区域发现了robot_y
-                if((robot_y_y - robot_x_y)*robot_y_orientation<0){ // y面朝x而来
-                    if(robot_x_x >= robot_y_x){// y从x的左侧来
-                        if(robot_y_orientation > 0){
+            if (segma <= pi / 2 && distance * cos(segma) < 8 && distance * sin(segma) < 0.9) {// robot_x在自己正前方的感知区域发现了robot_y
+                if ((robot_y_y - robot_x_y) * robot_y_orientation < 0) {                      // y面朝x而来
+                    if (robot_x_x >= robot_y_x) {                                             // y从x的左侧来
+                        if (robot_y_orientation > 0) {
                             cout << "rotate " << robot_x << " " << pi << endl;
                             cout << "rotate " << robot_y << " " << pi << endl;
-                        }else{
+                        } else {
                             cout << "rotate " << robot_x << " " << -pi << endl;
                             cout << "rotate " << robot_y << " " << -pi << endl;
                         }
-                    }else{// y从x的右侧来
-                        if(robot_y_orientation > 0){
+                    } else {// y从x的右侧来
+                        if (robot_y_orientation > 0) {
                             cout << "rotate " << robot_x << " " << -pi << endl;
                             cout << "rotate " << robot_y << " " << -pi << endl;
-                        }else{
+                        } else {
                             cout << "rotate " << robot_x << " " << pi << endl;
                             cout << "rotate " << robot_y << " " << pi << endl;
                         }
                     }
-                }else{ // y拿着东西在x前面跑
+                } else {// y拿着东西在x前面跑
                     cout << "forward " << robot_x << " " << 3 << endl;
                 }
                 break;
