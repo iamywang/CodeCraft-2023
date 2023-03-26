@@ -116,12 +116,6 @@ void setRobotPlatformDistanceDirectionTime4(int robot_id) {
 
         double distance_wall = 0.75 + distance_within;
         if (robots[robot_id]->item_type != 0) {
-            if (left_wall < distance_wall && ((robots[robot_id]->orientation > 0.5 * pi && robots[robot_id]->orientation < pi) || (robots[robot_id]->orientation > -pi && robots[robot_id]->orientation < -0.5 * pi)))
-                robots[robot_id]->platform_forward_velocity[i] = 0.8;
-            if (right_wall < distance_wall && ((robots[robot_id]->orientation > 0 && robots[robot_id]->orientation < 0.5 * pi) || (robots[robot_id]->orientation > -0.5 * pi && robots[robot_id]->orientation < 0)))
-                robots[robot_id]->platform_forward_velocity[i] = 0.8;
-            if (up_wall < distance_wall && robots[robot_id]->orientation > 0 && robots[robot_id]->orientation < pi)
-                robots[robot_id]->platform_forward_velocity[i] = 0.8;
             if (down_wall < distance_wall && robots[robot_id]->orientation > -pi && robots[robot_id]->orientation < 0)
                 robots[robot_id]->platform_forward_velocity[i] = 0.8;
         }
