@@ -87,8 +87,7 @@ void setRobotPlatformDistanceDirectionTime1(int robot_id) {
 
         double decelerate_speed = min(min_wall_x, min_wall_y) < 1.2 ? min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min_wall) : max_forward_speed;
         // double decelerate_speed = min(line_speed, fabs(robots[robot_id]->platform_angular_velocity[i]) * min((robots[robot_id]->position.first - current_robot_radius) * 0.5, (robots[robot_id]->position.second - current_robot_radius) * 0.5));
-        if (decelerate_speed < 0.1)
-            decelerate_speed = 0.1;
+        decelerate_speed = 3;
         // 计算线速度的加速度
         double linear_acceleration = double(force) / getRobotMass(robot_id);
 
@@ -143,7 +142,7 @@ void greedyAlg1(int frame_id, int money) {
 
         // 为了归一化available_demand
         double available_demand_sum = 0;
-        for(int each_item_type = 1; each_item_type <= 7; each_item_type++){
+        for (int each_item_type = 1; each_item_type <= 7; each_item_type++) {
             available_demand_sum += available_demand[each_item_type];
         }
 
@@ -160,7 +159,7 @@ void greedyAlg1(int frame_id, int money) {
                         double loss_param = double(item_prices[item_idx].second) * time_coefficient - double(item_prices[item_idx].first);
                         // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
                         // distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_supply[item_idx][i]));
-                        distance_id_1.push_back(make_pair((distance_param/50.0)*(41520.0/loss_param)*(available_demand_sum/(available_demand[item_idx]+1)), item_supply[item_idx][i]));
+                        distance_id_1.push_back(make_pair((distance_param / 50.0) * (41520.0 / loss_param) * (available_demand_sum / (available_demand[item_idx] + 1)), item_supply[item_idx][i]));
                     }
                 }
 
@@ -172,10 +171,10 @@ void greedyAlg1(int frame_id, int money) {
                         // distance_id_1.push_back(make_pair(distance_param, item_supply[item_idx][i]));
                         if (platforms[item_pending[item_idx][i]]->id == robot_idx)
                             // distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
-                            distance_id_1.push_back(make_pair((distance_param/50.0)*(41520.0/loss_param)*(available_demand_sum/(available_demand[item_idx]+1)), item_pending[item_idx][i]));
+                            distance_id_1.push_back(make_pair((distance_param / 50.0) * (41520.0 / loss_param) * (available_demand_sum / (available_demand[item_idx] + 1)), item_pending[item_idx][i]));
                         if (robot_idx == 0 && platforms[item_pending[item_idx][i]]->id == 2)
                             // distance_id_1.push_back(make_pair(distance_param / loss_param / available_demand[item_idx], item_pending[item_idx][i]));
-                            distance_id_1.push_back(make_pair((distance_param/50.0)*(41520.0/loss_param)*(available_demand_sum/(available_demand[item_idx]+1)), item_pending[item_idx][i]));
+                            distance_id_1.push_back(make_pair((distance_param / 50.0) * (41520.0 / loss_param) * (available_demand_sum / (available_demand[item_idx] + 1)), item_pending[item_idx][i]));
                     }
                 }
             }
@@ -236,19 +235,11 @@ void greedyAlg1(int frame_id, int money) {
             // 根据距离进行出售
             if (robots[robot_idx]->platform_distance_sort_sell.size() > 0) {
                 int fetch_index = -1;
-                int nine_index = -1;
-
                 for (int sell = 0; sell < robots[robot_idx]->platform_distance_sort_sell.size(); sell++) {
                     fetch_index = robots[robot_idx]->platform_distance_sort_sell[sell];
                     int can_product = platforms[fetch_index]->product_state == 0 || platforms[fetch_index]->remain_time == -1;
                     // 如果没有匹配到已经选择的平台，则选择
                     if (selected_platforms_sell.find(make_pair(robot_item, fetch_index)) == selected_platforms_sell.end()) {
-                        if (platforms[fetch_index]->id == 9 && nine_index == -1) {
-                            // 率先匹配到的是9
-                            nine_index = fetch_index;
-                            fetch_index = -1;
-                            continue;
-                        }
                         if (platforms[fetch_index]->id != 8 || platforms[fetch_index]->id != 9)
                             selected_platforms_sell.insert(make_pair(robot_item, fetch_index));
                         break;
@@ -259,10 +250,7 @@ void greedyAlg1(int frame_id, int money) {
                         break;
                     }
                 }
-
-                if (fetch_index == -1 && nine_index != -1)
-                    fetch_index = nine_index;
-                else if (fetch_index == -1)
+                if (fetch_index == -1)
                     fetch_index = robots[robot_idx]->platform_distance_sort_sell[0];
                 if (platforms[fetch_index]->remain_time == -1)
                     selected_platforms_buy.insert(fetch_index);
@@ -312,26 +300,26 @@ void greedyAlg1(int frame_id, int money) {
 
             // 两个掉头
             double segma = fabs(acos((cos(robot_x_orientation) * (robot_y_x - robot_x_x) + sin(robot_x_orientation) * (robot_y_y - robot_x_y)) / distance));
-            if (segma<=pi/2 && distance * cos(segma) < 8 && distance * sin(segma) < 0.9) { // robot_x在自己正前方的感知区域发现了robot_y
-                if((robot_y_y - robot_x_y)*robot_y_orientation<0){ // y面朝x而来
-                    if(robot_x_x >= robot_y_x){// y从x的左侧来
-                        if(robot_y_orientation > 0){
+            if (segma <= pi / 2 && distance * cos(segma) < 8 && distance * sin(segma) < 0.9) {// robot_x在自己正前方的感知区域发现了robot_y
+                if ((robot_y_y - robot_x_y) * robot_y_orientation < 0) {                      // y面朝x而来
+                    if (robot_x_x >= robot_y_x) {                                             // y从x的左侧来
+                        if (robot_y_orientation > 0) {
                             cout << "rotate " << robot_x << " " << pi << endl;
                             cout << "rotate " << robot_y << " " << pi << endl;
-                        }else{
+                        } else {
                             cout << "rotate " << robot_x << " " << -pi << endl;
                             cout << "rotate " << robot_y << " " << -pi << endl;
                         }
-                    }else{// y从x的右侧来
-                        if(robot_y_orientation > 0){
+                    } else {// y从x的右侧来
+                        if (robot_y_orientation > 0) {
                             cout << "rotate " << robot_x << " " << -pi << endl;
                             cout << "rotate " << robot_y << " " << -pi << endl;
-                        }else{
+                        } else {
                             cout << "rotate " << robot_x << " " << pi << endl;
                             cout << "rotate " << robot_y << " " << pi << endl;
                         }
                     }
-                }else{ // y拿着东西在x前面跑
+                } else {// y拿着东西在x前面跑
                     cout << "forward " << robot_x << " " << 3 << endl;
                 }
                 break;

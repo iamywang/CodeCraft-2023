@@ -24,7 +24,7 @@ int main() {
         if (nine_numbers == 4 && eight_numbers == 1) {
             distance_within = 0.39;
             item_recipes.find(9)->second = 128;
-            max_frames = 8980;
+            max_frames = 9000;
             time_coefficient = 0.9;
             greedyAlg1(frame_id, money);
         } else if (nine_numbers == 0 && eight_numbers == 2) {
