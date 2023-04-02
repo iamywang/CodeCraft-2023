@@ -1,7 +1,7 @@
-#include "map1.h"
-#include "map2.h"
-#include "map3.h"
-#include "map4.h"
+#include "map1.hpp"
+#include "map2.hpp"
+#include "map3.hpp"
+#include "map4.hpp"
 
 // 主函数，调用读入地图、读入每一帧场面信息、调度算法
 int main() {
